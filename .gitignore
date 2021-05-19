@@ -259,3 +259,46 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/UserSettings
+/Temp
+/ProjectSettings
+/LocalPackages/com.unity.render-pipelines.high-definition-config
+/Library
+/Assembly-CSharp-Editor.csproj
+/Mechanics.sln
+/Assembly-CSharp.csproj
+/.vsconfig
+/Unity.RenderPipelines.HighDefinition.Config.Runtime.csproj
+/Assets/ExampleAssets
+/Assets/KriptoFX/Explosions/DemoSources/ExplosionDemoGUI.cs
+/Assets/KriptoFX
+/Assets/LeanTween/Documentation/assets/css/main.css
+/Assets/HDRPDefaultResources
+/Assets/LeanTween
+/Assets/Materials
+/Assets/Presets
+/Assets/Resources/Animations
+/Assets/Resources/Blocks
+/Assets/Resources/Buildings
+/Assets/Resources/Character
+/Assets/Resources/Parts
+/Assets/Resources/Projectiles
+/Assets/Resources/Resources/Icons
+/Assets/Resources/Splines
+/Assets/Resources/Tank
+/Assets/Resources/TankCrafting
+/Assets/Resources/UI
+/Assets/Resources/Units/Pawn
+/Assets/Scenes
+/Assets/Resources/VFX
+/Assets/Settings
+/Assets/SpaceSkies Free
+/Assets/Starfield Skybox
+/Assets/Test2
+/Assets/TextMesh Pro
+/Assets/TutorialInfo
+/Assets/Universal Sound FX
+/Assets/New Terrain.asset
+/Assets/Readme.asset
+/Assets/Test.unity
+/Assets/Test2.unity

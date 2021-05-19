@@ -1,0 +1,28 @@
+#pragma kernel CSMain
+
+RWStructuredBuffer<float3> Vertices;
+RWStructuredBuffer<float3> Positions;
+RWStructuredBuffer<float> VerticeIds;
+
+float Distance(float3 pos1, float3 pos2) 
+{
+	float3 dist = float3(pos1.x- pos2.x, pos1.y- pos2.y, pos1.z- pos2.z);
+	return sqrt(dist.x*dist.x + dist.y*dist.y + dist.z*dist.z);
+}
+
+[numthreads(64, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	float distance = 9999;
+	float verticeId = 0;
+	for (uint i = 0; i < Vertices.Length; i++) 
+	{
+		float newDistance = Distance(Positions[id.x],Vertices[i]);
+		if (newDistance < distance) 
+		{
+			distance = newDistance;
+			verticeId = i;
+		}
+	}
+	VerticeIds[id.x]= verticeId;
+}

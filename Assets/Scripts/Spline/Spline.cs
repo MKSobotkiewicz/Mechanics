@@ -1,0 +1,204 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using UnityEngine;
+
+namespace Project.Spline
+{
+    [ExecuteInEditMode]
+    public class Spline : MonoBehaviour
+    {
+        public float Width;
+        [Range(0, 30)]
+        public int Divisions;
+        [Range(0, 10)]
+        public int SoftenSteps;
+        public bool Update = false;
+
+        private List<Vector3> mainPoints;
+        private List<Vector3> softenedPoints;
+        private List<Vector3> dividedPoints;
+
+        private MeshRenderer meshRenderer;
+        private MeshFilter meshFilter;
+
+        public void OnValidate()
+        {
+            if (!Update)
+            {
+                return;
+            }
+            Update = false;
+            Generate();
+        }
+
+        public void Generate()
+        {
+            GetMainPoints();
+            SoftenPoints();
+            DividePoints();
+            GenerateMesh();
+        }
+
+        private void GetMainPoints()
+        {
+            var nodes = GetComponentsInChildren<SplineNode>();
+            mainPoints = new List<Vector3>();
+            foreach (var node in nodes)
+            {
+                mainPoints.Add(node.transform.position);
+            }
+        }
+
+        private void SoftenPoints()
+        {
+            softenedPoints = new List<Vector3>(mainPoints);
+            for (int i=0;i< SoftenSteps;i++)
+            {
+                softenedPoints = SoftenStep(softenedPoints);
+            }
+        }
+
+        private List<Vector3> SoftenStep(List<Vector3> points)
+        {
+            var newPoints = new List<Vector3>();
+            newPoints.Add(points[0]);
+            for (int i=0;i< points.Count-1;i++)
+            {
+                newPoints.Add(Vector3.Lerp(points[i], points[i+1],0.5f));
+            }
+            newPoints.Add(points.Last());
+            return newPoints;
+        }
+
+        private void DividePoints()
+        {
+            var dividedPointsSet = new HashSet<Vector3>();
+            dividedPointsSet.Add(softenedPoints[0]);
+            for (int i = 0; i < softenedPoints.Count - 2; i++)
+            {
+                dividedPointsSet.UnionWith(DivideStep(softenedPoints[i], softenedPoints[i+1], softenedPoints[i+2]));
+            }
+            dividedPointsSet.Add(softenedPoints.Last());
+            dividedPoints = dividedPointsSet.ToList();
+        }
+
+        private List<Vector3> DivideStep(Vector3 point1, Vector3 point2, Vector3 point3)
+        {
+            var newPoints = new List<Vector3>();
+            var startPoint = Vector3.Lerp(point1, point2, 0.5f);
+            var endPoint = Vector3.Lerp(point2, point3, 0.5f);
+            for (int i = 0; i <= Divisions; i++)
+            {
+                var pos = (float)i / (float)Divisions;
+                var point12 = Vector3.Lerp(startPoint, point2, pos);
+                var point23 = Vector3.Lerp(point2, endPoint, pos);
+                newPoints.Add(Vector3.Lerp(point23, point12, 1- pos));
+            }
+            return newPoints;
+        }
+
+        private Vector3 GetNormal(Vector3 point1, Vector3 point2)
+        {
+            return (point2 - point1).normalized;
+        }
+
+        private List<Vector3> MovePoints(List<Vector3> points, float value)
+        {
+            var movedPoints = new List<Vector3>();
+            Vector3 normal;
+            for (int i = 0; i < points.Count-1; i++)
+            {
+                normal = GetNormal(points[i], points[i+1]);
+                movedPoints.Add(points[i] + Vector3.Cross(normal, Vector3.up).normalized * value);
+            }
+            normal= GetNormal(points[points.Count - 2], points[points.Count - 1]);
+            movedPoints.Add(points[points.Count - 1] + Vector3.Cross(normal, Vector3.up).normalized * value);
+            return movedPoints;
+        }
+
+        private void GenerateMesh()
+        {
+            if ((meshRenderer =GetComponent<MeshRenderer>())==null)
+            {
+                meshRenderer = gameObject.AddComponent<MeshRenderer>();
+            }
+            if ((meshFilter = GetComponent<MeshFilter>()) == null)
+            {
+                meshFilter = gameObject.AddComponent<MeshFilter>();
+            }
+
+            var vertices = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var triangles = new List<int>();
+
+            var leftPoints = MovePoints(dividedPoints, -Width);
+            var rightPoints = MovePoints(dividedPoints, Width);
+
+            vertices.Add(leftPoints[0]);
+            vertices.Add(rightPoints[0]);
+            uvs.Add(new Vector2(0,0));
+            uvs.Add(new Vector2(0, 1));
+            var length = 0f;
+            for (int i=0;i< leftPoints.Count;i++)
+            {
+                vertices.Add(leftPoints[i]);
+                vertices.Add(rightPoints[i]);
+                triangles.AddRange(new List<int> {i * 2,
+                                                  i * 2 + 1,
+                                                  i * 2 + 2,
+                                                  i * 2 + 2,
+                                                  i * 2 + 1,
+                                                  i * 2 + 3 });
+                var distance = 0f;
+                if (i == 0)
+                {
+                    distance = Vector3.Distance(leftPoints[i], leftPoints[i + 1]);
+                }
+                else
+                {
+                    distance = Vector3.Distance(leftPoints[i - 1], leftPoints[i]);
+                }
+                length += (distance/(Width*2));
+                uvs.Add(new Vector2(length, 0));
+                uvs.Add(new Vector2(length, 1));
+            }
+
+            var mesh = new Mesh();
+
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles,0);
+            mesh.SetUVs(0,uvs);
+
+            mesh.Optimize();
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            mesh.RecalculateBounds();
+
+            meshFilter.mesh = mesh;
+        }
+
+        void OnDrawGizmos()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(this.transform.position, 0.1f);
+            for (int i = 0; i < mainPoints.Count - 1; i++)
+            {
+                Gizmos.DrawLine(mainPoints[i], mainPoints[i+1]);
+            }
+            Gizmos.color = Color.green;
+            var leftPoints = MovePoints(dividedPoints,-Width);
+            var rightPoints = MovePoints(dividedPoints, Width);
+            for (int i = 0; i < dividedPoints.Count - 1; i++)
+            {
+                Gizmos.DrawLine(leftPoints[i], leftPoints[i + 1]);
+                Gizmos.DrawLine(dividedPoints[i], dividedPoints[i + 1]);
+                Gizmos.DrawLine(rightPoints[i], rightPoints[i + 1]);
+            }
+        }
+
+
+    }
+}

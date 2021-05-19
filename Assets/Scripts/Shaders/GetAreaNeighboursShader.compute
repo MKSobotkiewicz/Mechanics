@@ -1,0 +1,91 @@
+#pragma kernel CSMain
+
+RWStructuredBuffer<float3> Positions;
+RWStructuredBuffer<float> NeighbourIds;
+
+float Distance(float3 pos1, float3 pos2)
+{
+	float3 dist = float3(pos1.x - pos2.x, pos1.y - pos2.y, pos1.z - pos2.z);
+	return sqrt(dist.x*dist.x + dist.y*dist.y + dist.z*dist.z);
+}
+
+[numthreads(64, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	float distance[] = { 99999,99999,99999,99999,99999,99999 };
+	float neighbourId[] = {0,0,0,0,0,0};
+	for (uint i = 0; i < Positions.Length; i++)
+	{
+		if (id.x == i) 
+		{
+			continue;
+		}
+		float newDistance = Distance(Positions[id.x], Positions[i]);
+		if (newDistance < distance[0])
+		{
+			distance[5] = distance[4];
+			distance[4] = distance[3];
+			distance[3] = distance[2];
+			distance[2] = distance[1];
+			distance[1] = distance[0];
+			distance[0] = newDistance;
+			neighbourId[5] = neighbourId[4];
+			neighbourId[4] = neighbourId[3];
+			neighbourId[3] = neighbourId[2];
+			neighbourId[2] = neighbourId[1];
+			neighbourId[1] = neighbourId[0];
+			neighbourId[0] = i;
+		}
+		else if (newDistance < distance[1])
+		{
+			distance[5] = distance[4];
+			distance[4] = distance[3];
+			distance[3] = distance[2];
+			distance[2] = distance[1];
+			distance[1] = newDistance;
+			neighbourId[5] = neighbourId[4];
+			neighbourId[4] = neighbourId[3];
+			neighbourId[3] = neighbourId[2];
+			neighbourId[2] = neighbourId[1];
+			neighbourId[1] = i;
+		}
+		else if (newDistance < distance[2])
+		{
+			distance[5] = distance[4];
+			distance[4] = distance[3];
+			distance[3] = distance[2];
+			distance[2] = newDistance;
+			neighbourId[5] = neighbourId[4];
+			neighbourId[4] = neighbourId[3];
+			neighbourId[3] = neighbourId[2];
+			neighbourId[2] = i;
+		}
+		else if (newDistance < distance[3])
+		{
+			distance[5] = distance[4];
+			distance[4] = distance[3];
+			distance[3] = newDistance;
+			neighbourId[5] = neighbourId[4];
+			neighbourId[4] = neighbourId[3];
+			neighbourId[3] = i;
+		}
+		else if (newDistance < distance[4])
+		{
+			distance[5] = distance[4];
+			distance[4] = newDistance;
+			neighbourId[5] = neighbourId[4];
+			neighbourId[4] = i;
+		}
+		else if (newDistance < distance[5])
+		{
+			distance[5] = newDistance;
+			neighbourId[5] = i;
+		}
+	}
+	NeighbourIds[id.x * 6] = neighbourId[0];
+	NeighbourIds[id.x * 6 + 1] = neighbourId[1];
+	NeighbourIds[id.x * 6 + 2] = neighbourId[2];
+	NeighbourIds[id.x * 6 + 3] = neighbourId[3];
+	NeighbourIds[id.x * 6 + 4] = neighbourId[4];
+	NeighbourIds[id.x * 6 + 5] = neighbourId[5];
+}

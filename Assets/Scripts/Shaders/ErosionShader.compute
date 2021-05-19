@@ -1,0 +1,101 @@
+#pragma kernel CSMain
+
+RWTexture2D<float4> Heightmap;
+
+void GetNeighbours(inout float2 coordinates[8], inout float height[8], float2 currentCoordinate)
+{
+	float2 textureSize;
+	Heightmap.GetDimensions(textureSize.x, textureSize.y);
+	for (int i = 0; i < 8; i++)
+	{
+		height[i] = 2048;
+	}
+	if (currentCoordinate.x > 0)
+	{
+		if (currentCoordinate.y > 0)
+		{
+			height[0] = Heightmap[float2(currentCoordinate.x - 1, currentCoordinate.y - 1)].r;
+			coordinates[0] = float2(currentCoordinate.x-1, currentCoordinate.y - 1);
+		}
+		height[1] = Heightmap[float2(currentCoordinate.x - 1, currentCoordinate.y)].r;
+		coordinates[1] = float2(currentCoordinate.x - 1, currentCoordinate.y);
+		if (currentCoordinate.y < textureSize.y - 1)
+		{
+			height[2] = Heightmap[float2(currentCoordinate.x - 1, currentCoordinate.y + 1)].r;
+			coordinates[2] = float2(currentCoordinate.x - 1, currentCoordinate.y + 1);
+		}
+	}
+	if (currentCoordinate.y > 0)
+	{
+		height[3] = Heightmap[float2(currentCoordinate.x, currentCoordinate.y - 1)].r;
+		coordinates[3] = float2(currentCoordinate.x, currentCoordinate.y - 1);
+	}
+	if (currentCoordinate.y < textureSize.y - 1)
+	{
+		height[4] = Heightmap[float2(currentCoordinate.x, currentCoordinate.y + 1)].r;
+		coordinates[4] = float2(currentCoordinate.x, currentCoordinate.y + 1);
+	}
+	if (currentCoordinate.x < textureSize.x-1)
+	{
+		if (currentCoordinate.y > 0)
+		{
+			height[5] = Heightmap[float2(currentCoordinate.x + 1, currentCoordinate.y - 1)].r;
+			coordinates[5] = float2(currentCoordinate.x + 1, currentCoordinate.y - 1);
+		}
+		height[6] = Heightmap[float2(currentCoordinate.x + 1, currentCoordinate.y)].r;
+		coordinates[6] = float2(currentCoordinate.x + 1, currentCoordinate.y);
+		if (currentCoordinate.y < textureSize.y - 1)
+		{
+			height[7] = Heightmap[float2(currentCoordinate.x + 1, currentCoordinate.y + 1)].r;
+			coordinates[7] = float2(currentCoordinate.x + 1, currentCoordinate.y + 1);
+		}
+	}
+}
+
+float2 GetLowestNeighbour(float2 currentCoordinate,float2 lastCoordinate)
+{
+	float2 coordinates[8] = {float2(0,0),float2(0,0), float2(0,0), float2(0,0), float2(0,0), float2(0,0), float2(0,0), float2(0,0)};
+	float height[8] = {0,0,0,0,0,0,0,0};
+	GetNeighbours(coordinates, height, currentCoordinate);
+	float2 lowest = currentCoordinate;
+	float lowestValue = Heightmap[float2(currentCoordinate.x, currentCoordinate.y)].r;
+	for (int i = 0; i < 8; i++)
+	{
+		if (height[i] < lowestValue)
+		{
+			if (lastCoordinate.x == coordinates[i].x&&lastCoordinate.y == coordinates[i].y)
+			{
+				continue;
+			}
+			lowestValue = height[i];
+			lowest = coordinates[i];
+		}
+	}
+	return lowest;
+}
+
+void Erode(float2 coordinates)
+{
+	float2 lowest;
+	float2 last= float2(0,0);
+	float sediment = 0;
+	while (1)
+	{
+		lowest = GetLowestNeighbour(coordinates, last);
+		if (lowest.x == coordinates.x&&lowest.y == coordinates.y)
+		{
+			Heightmap[coordinates] += sediment;
+			break;
+		}
+		sediment += float4(0, 0.1, 0, 0);
+		Heightmap[coordinates] -= float4(0, 0.1,0,0);
+		last = coordinates;
+		coordinates = lowest;
+	}
+}
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	Erode(id.xy);
+}
