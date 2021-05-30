@@ -16,7 +16,7 @@ namespace Project.Globe
 
         private MeshFilter meshFilter;
 
-        private System.Random random = new System.Random();
+        private static readonly System.Random random = new System.Random();
 
         public void Start()
         {
@@ -51,12 +51,6 @@ namespace Project.Globe
 
         public void Update()
         {
-            /*
-            ComputeShader.SetFloat("Scale", Scale);
-            ComputeShader.SetFloat("Strength", Strength);
-            ComputeShader.SetFloat("X", X);
-            ComputeShader.SetTexture(0, "Result", Texture);
-            ComputeShader.Dispatch(0, Texture.width / 8, Texture.height / 8, 1);*/
         }
     }
 }

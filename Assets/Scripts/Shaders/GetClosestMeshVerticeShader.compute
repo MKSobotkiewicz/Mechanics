@@ -1,8 +1,11 @@
 #pragma kernel CSMain
 
+#define IDS_PER_AREA 10
+
+
 RWStructuredBuffer<float3> Vertices;
 RWStructuredBuffer<float3> Positions;
-RWStructuredBuffer<float> VerticeIds;
+RWStructuredBuffer<int> VerticeIds;
 
 float Distance(float3 pos1, float3 pos2) 
 {
@@ -10,19 +13,54 @@ float Distance(float3 pos1, float3 pos2)
 	return sqrt(dist.x*dist.x + dist.y*dist.y + dist.z*dist.z);
 }
 
+void PushBackFloat(inout float array[IDS_PER_AREA], float value,int index)
+{
+	for (int i= array.Length - 2;i>= index;i--)
+	{
+		array[i+1] = array[i];
+	}
+	array[index] = value;
+}
+
+void PushBackInt(inout int array[IDS_PER_AREA], int value, int index)
+{
+	for (int i = array.Length - 2; i >= index; i--)
+	{
+		array[i+1] = array[i];
+	}
+	array[index] = value;
+}
+
 [numthreads(64, 1, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
-	float distance = 9999;
-	float verticeId = 0;
-	for (uint i = 0; i < Vertices.Length; i++) 
+	float distance[IDS_PER_AREA] = { 99999,99999,99999,99999,99999,99999,99999,99999,99999,99999 };
+	int verticeId[IDS_PER_AREA] = { 0,0,0,0,0,0,0,0,0,0 };
+	for (uint i = 0; i < Vertices.Length; i++)
 	{
-		float newDistance = Distance(Positions[id.x],Vertices[i]);
-		if (newDistance < distance) 
+		if (id.x == i)
 		{
-			distance = newDistance;
-			verticeId = i;
+			continue;
+		}
+		float newDistance = Distance(Positions[id.x], Vertices[i]);
+		for (uint j = 0; j < IDS_PER_AREA; j++)
+		{
+			if (newDistance < distance[j])
+			{
+				PushBackFloat(distance, newDistance, j);
+				PushBackInt(verticeId, i, j);
+				break;
+			}
 		}
 	}
-	VerticeIds[id.x]= verticeId;
+	VerticeIds[id.x * 10] = verticeId[0];
+	VerticeIds[id.x * 10 + 1] = verticeId[1];
+	VerticeIds[id.x * 10 + 2] = verticeId[2];
+	VerticeIds[id.x * 10 + 3] = verticeId[3];
+	VerticeIds[id.x * 10 + 4] = verticeId[4];
+	VerticeIds[id.x * 10 + 5] = verticeId[5];
+	VerticeIds[id.x * 10 + 6] = verticeId[6];
+	VerticeIds[id.x * 10 + 7] = verticeId[7];
+	VerticeIds[id.x * 10 + 8] = verticeId[8];
+	VerticeIds[id.x * 10 + 9] = verticeId[9];
 }

@@ -8,21 +8,32 @@ namespace Project.Map
     {
         public GameObject AreaPrefab;
         public List<Area> Areas = new List<Area>();
+        public List<Area> WaterAreas = new List<Area>();
+        public List<Area> MountainAreas = new List<Area>();
+        public List<Area> HillsAreas = new List<Area>();
+        public List<Area> PlainsAreas = new List<Area>();
+        public List<River> Rivers = new List<River>();
         public MeshFilter MeshFilter;
+        public Globe.SnowMovement SnowMovement;
+        public UnityEngine.Material RiverMaterial;
         public ComputeShader DistanceShader;
         public ComputeShader NeighbourShader;
+        public List<GameObject> Mountains;
+        public List<GameObject> Hills;
 
-        private readonly System.Random random = new System.Random();
+        private static readonly System.Random random = new System.Random();
 
         public void Start()
         {
-            Debug.Log(name+ " creating areas");
+            Debug.Log(name + " creating areas, time: " + UnityEngine.Time.realtimeSinceStartup);
             CreateAreas();
-            Debug.Log(name + " setting areas neighbours");
+            Debug.Log(name + " setting areas neighbour, time: " + UnityEngine.Time.realtimeSinceStartup);
             SetAreasNeighbours();
-            Debug.Log(name + " setting areas types");
+            Debug.Log(name + " setting areas types, time: " + UnityEngine.Time.realtimeSinceStartup);
             SetAreasTypes();
-            Debug.Log(name + " done");
+            Debug.Log(name + " generating rivers, time: " + UnityEngine.Time.realtimeSinceStartup);
+            GenerateRivers();
+            Debug.Log(name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
             foreach (var area in Areas)
             {
                 area.Initialize(Areas);
@@ -36,26 +47,15 @@ namespace Project.Map
             var mesh = GetComponent<MeshFilter>().mesh;
 
             int i = 0;
-            foreach (var vertice in mesh.vertices)
+            var vertices = new HashSet<Vector3>(mesh.vertices);
+            foreach (var vertice in vertices)
             {
-                bool done = false;
-                foreach (var oldArea in Areas)
-                {
-                    if (Vector3.Distance(oldArea.transform.position, vertice * transform.localScale.x) < 0.1f)
-                    {
-                        done = true;
-                        break;
-                    }
-                }
-                if (done)
-                {
-                    continue;
-                }
                 var go = Instantiate(AreaPrefab);
                 go.name = "Area " + i.ToString();
                 var area = go.GetComponent<Area>();
                 area.transform.parent = transform;
                 area.transform.position = vertice * transform.localScale.x;
+                area.SetGlobeMesh(MeshFilter.mesh);
 
                 var material = area.GetComponentInChildren<MeshRenderer>().material;
                 material.renderQueue = 3000 + ((i + 1) % 100);
@@ -67,8 +67,9 @@ namespace Project.Map
 
         private void SetAreasNeighbours()
         {
+            Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
             var positions = new Vector3[Areas.Count];
-            var ids=new float[Areas.Count*6];
+            var ids = new float[Areas.Count * 6];
             for (int i = 0; i < Areas.Count; i++)
             {
                 positions[i] = Areas[i].transform.position;
@@ -79,11 +80,13 @@ namespace Project.Map
             var dataSize = positions.Length / 64 + 1;
             NeighbourShader.SetBuffer(0, "Positions", areasBuffer);
             NeighbourShader.SetBuffer(0, "NeighbourIds", neighbourIdsBuffer);
+            Debug.Log("  dispatching shader, time: " + UnityEngine.Time.realtimeSinceStartup);
             NeighbourShader.Dispatch(0, dataSize, 1, 1);
             neighbourIdsBuffer.GetData(ids);
             areasBuffer.Release();
             neighbourIdsBuffer.Release();
 
+            Debug.Log("  setting neighbours, time: " + UnityEngine.Time.realtimeSinceStartup);
             for (int i = 0; i < Areas.Count; i++)
             {
                 var neighbours = new List<Area>
@@ -101,12 +104,14 @@ namespace Project.Map
 
         private void SetAreasTypes()
         {
+            int idsPerArea = 10;
+            Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
             var positions = new Vector3[Areas.Count];
             for (int i = 0; i < Areas.Count; i++)
             {
                 positions[i] = Areas[i].transform.position;
             }
-            var ids = new float[positions.Length];
+            var ids = new int[positions.Length* idsPerArea];
             var vertices = MeshFilter.mesh.vertices;
 
             Matrix4x4 localToWorld = MeshFilter.transform.localToWorldMatrix;
@@ -117,22 +122,112 @@ namespace Project.Map
 
             var verticesBuffer = new ComputeBuffer(vertices.Length, sizeof(float) * 3);
             var positionBuffer = new ComputeBuffer(positions.Length, sizeof(float) * 3);
-            var idBuffer = new ComputeBuffer(ids.Length, sizeof(float));
+            var idBuffer = new ComputeBuffer(ids.Length, sizeof(int));
             verticesBuffer.SetData(vertices);
             positionBuffer.SetData(positions);
             var dataSize = positions.Length / 64 + 1;
             DistanceShader.SetBuffer(0, "Vertices", verticesBuffer);
             DistanceShader.SetBuffer(0, "Positions", positionBuffer);
             DistanceShader.SetBuffer(0, "VerticeIds", idBuffer);
+            Debug.Log("  dispatching shader, time: " + UnityEngine.Time.realtimeSinceStartup);
             DistanceShader.Dispatch(0, dataSize, 1, 1);
             idBuffer.GetData(ids);
             verticesBuffer.Release();
             positionBuffer.Release();
             idBuffer.Release();
+            Debug.Log("  setting colors, time: " + UnityEngine.Time.realtimeSinceStartup);
+            var colors = MeshFilter.mesh.colors;
             for (int i = 0; i < Areas.Count; i++)
             {
-                Areas[i].SetType(MeshFilter.mesh.colors[(int)ids[i]]);
+                Areas[i].SetType(colors[ids[i* idsPerArea]],this);
+                var verticesIds = new List<int>(ids).GetRange(i * idsPerArea, idsPerArea);
+                Areas[i].SetGlobeVertices(verticesIds.ToArray());
+
             }
+            Debug.Log("  instantiating meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
+            vertices = MeshFilter.mesh.vertices;
+            for (int i = 0; i < Areas.Count; i++)
+            {
+                var position = localToWorld.MultiplyPoint3x4(vertices[ids[i* idsPerArea]]);
+                Areas[i].Position = position;
+                switch (Areas[i].Type)
+                {
+                    case Area.EType.Mountains:
+                        {
+                            var j = random.Next(Mountains.Count);
+                            var mountain = Instantiate(Mountains[j]);
+                            mountain.transform.position = position * 0.995f;
+                            mountain.transform.LookAt(new Vector3(0, 0, 0));
+                            mountain.GetComponentInChildren<MeshRenderer>().transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
+                            mountain.transform.parent = MeshFilter.transform;
+                            mountain.transform.localScale /= 3;
+                            SnowMovement.AddMaterial(mountain.GetComponentInChildren<MeshRenderer>().material);
+                            Areas[i].SetLandformMesh(mountain.GetComponentInChildren<MeshFilter>().mesh);
+                            break;
+                        }
+                    case Area.EType.Hills:
+                        {
+                            var j = random.Next(Mountains.Count);
+                            var hill = Instantiate(Hills[j]);
+                            hill.transform.position = position * 0.995f;
+                            hill.transform.LookAt(new Vector3(0, 0, 0));
+                            hill.GetComponentInChildren<MeshRenderer>().transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
+                            hill.transform.parent = MeshFilter.transform;
+                            hill.transform.localScale /= 3;
+                            SnowMovement.AddMaterial(hill.GetComponentInChildren<MeshRenderer>().material);
+                            Areas[i].SetLandformMesh(hill.GetComponentInChildren<MeshFilter>().mesh);
+                            break;
+                        }
+                }
+            }
+        }
+
+        private void GenerateRivers()
+        {
+            var max = 400 + random.Next(100);
+            for (int i = 0; i < max; i++)
+            {
+                var start = MountainAreas[random.Next(MountainAreas.Count - 1)];
+                if (start.River == null)
+                {
+                    try
+                    {
+                        Rivers.Add(new River(start, 500, MeshFilter.transform, RiverMaterial));
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            var vertices = new List<int>();
+            var color = new Color(0,1,0,1);
+            foreach (var area in PlainsAreas)
+            {
+                if (area.River != null)
+                {
+                    vertices.AddRange(area.GetGlobeVertices());
+                    area.SetLandformVerticesColor(color);
+                }
+            }
+            foreach (var area in HillsAreas)
+            {
+                if (area.River != null)
+                {
+                    vertices.AddRange(area.GetGlobeVertices());
+                    area.SetLandformVerticesColor(color);
+                }
+            }
+            var colors = MeshFilter.mesh.colors;
+            foreach (var vertice in vertices)
+            {
+                if (colors[vertice].b != 1)
+                {
+                    colors[vertice] = color;
+                }
+            }
+            MeshFilter.mesh.SetColors(colors);
+
+            River.OptimizeAllRivers();
         }
     }
 }

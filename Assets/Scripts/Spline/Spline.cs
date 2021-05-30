@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Project.Spline
 {
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     public class Spline : MonoBehaviour
     {
         public float Width;
@@ -17,6 +17,8 @@ namespace Project.Spline
         public int SoftenSteps;
         public bool Update = false;
 
+        private bool startNarrow;
+
         private List<Vector3> mainPoints;
         private List<Vector3> softenedPoints;
         private List<Vector3> dividedPoints;
@@ -24,7 +26,7 @@ namespace Project.Spline
         private MeshRenderer meshRenderer;
         private MeshFilter meshFilter;
 
-        public void OnValidate()
+        /*public void OnValidate()
         {
             if (!Update)
             {
@@ -32,14 +34,23 @@ namespace Project.Spline
             }
             Update = false;
             Generate();
-        }
+        }*/
 
-        public void Generate()
+        public void Generate(float width = 0, int divisions = 0,int softenSteps=0, bool _startNarrow=false)
         {
+            Width = width;
+            Divisions = divisions;
+            SoftenSteps = softenSteps;
+            startNarrow = _startNarrow;
             GetMainPoints();
             SoftenPoints();
             DividePoints();
             GenerateMesh();
+        }
+
+        public void SetMaterial(UnityEngine.Material material)
+        {
+            meshRenderer.material = material;
         }
 
         private void GetMainPoints()
@@ -76,7 +87,10 @@ namespace Project.Spline
         private void DividePoints()
         {
             var dividedPointsSet = new HashSet<Vector3>();
-            dividedPointsSet.Add(softenedPoints[0]);
+            if (!startNarrow)
+            {
+                dividedPointsSet.Add(softenedPoints[0]);
+            }
             for (int i = 0; i < softenedPoints.Count - 2; i++)
             {
                 dividedPointsSet.UnionWith(DivideStep(softenedPoints[i], softenedPoints[i+1], softenedPoints[i+2]));
@@ -112,10 +126,10 @@ namespace Project.Spline
             for (int i = 0; i < points.Count-1; i++)
             {
                 normal = GetNormal(points[i], points[i+1]);
-                movedPoints.Add(points[i] + Vector3.Cross(normal, Vector3.up).normalized * value);
+                movedPoints.Add(points[i] + Vector3.Cross(normal, points[i].normalized).normalized * value);
             }
             normal= GetNormal(points[points.Count - 2], points[points.Count - 1]);
-            movedPoints.Add(points[points.Count - 1] + Vector3.Cross(normal, Vector3.up).normalized * value);
+            movedPoints.Add(points[points.Count - 1] + Vector3.Cross(normal, points[points.Count - 1].normalized).normalized * value);
             return movedPoints;
         }
 
@@ -136,6 +150,16 @@ namespace Project.Spline
 
             var leftPoints = MovePoints(dividedPoints, -Width);
             var rightPoints = MovePoints(dividedPoints, Width);
+
+            if (startNarrow)
+            {
+                for (int i = 0; i < Divisions; i++)
+                {
+                    var pos = (float)i / (float)Divisions;
+                    leftPoints[i] = Vector3.Slerp(dividedPoints[i], leftPoints[i], pos);
+                    rightPoints[i] = Vector3.Slerp(dividedPoints[i], rightPoints[i], pos);
+                }
+            }
 
             vertices.Add(leftPoints[0]);
             vertices.Add(rightPoints[0]);
@@ -171,9 +195,14 @@ namespace Project.Spline
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles,0);
             mesh.SetUVs(0,uvs);
+            for(int i = 0; i < vertices.Count; i++)
+            {
+                vertices[i] = vertices[i].normalized;
+            }
+            mesh.SetNormals(vertices);
 
             mesh.Optimize();
-            mesh.RecalculateNormals();
+            //mesh.RecalculateNormals();
             mesh.RecalculateTangents();
             mesh.RecalculateBounds();
 
@@ -186,10 +215,10 @@ namespace Project.Spline
             Gizmos.DrawSphere(this.transform.position, 0.1f);
             for (int i = 0; i < mainPoints.Count - 1; i++)
             {
-                Gizmos.DrawLine(mainPoints[i], mainPoints[i+1]);
+                Gizmos.DrawLine(mainPoints[i], mainPoints[i + 1]);
             }
             Gizmos.color = Color.green;
-            var leftPoints = MovePoints(dividedPoints,-Width);
+            var leftPoints = MovePoints(dividedPoints, -Width);
             var rightPoints = MovePoints(dividedPoints, Width);
             for (int i = 0; i < dividedPoints.Count - 1; i++)
             {

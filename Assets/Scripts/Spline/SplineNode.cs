@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Project.Spline
 {
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     public class SplineNode : MonoBehaviour
     {
         void OnDrawGizmos()

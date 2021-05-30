@@ -7,8 +7,7 @@ namespace Project.Globe
     public class SnowMovement : MonoBehaviour, Time.IDaily
     {
         public Time.Time Time;
-
-        private UnityEngine.Material material;
+        public List<UnityEngine.Material> materials=new List<UnityEngine.Material>();
 
         public void Start()
         {
@@ -17,7 +16,12 @@ namespace Project.Globe
                 Debug.LogError(name + " missing Time.");
             }
             Time.Dailies.Add(this);
-            material = GetComponent<MeshRenderer>().material;
+            materials.Add(GetComponent<MeshRenderer>().material);
+        }
+
+        public void AddMaterial(UnityEngine.Material material)
+        {
+            materials.Add(material);
         }
 
         public int Priority()
@@ -29,7 +33,10 @@ namespace Project.Globe
         {
             float angle =Mathf.Sin((((float)Time.Day - 80) / (float)Time.GetThisYearsDayCount()) * 2 * Mathf.PI) * 10;
             Debug.Log(angle);
-            material.SetFloat("Vector1_c1314484067849e9a0897c8e6b791b8b", -angle/30);
+            foreach (var material in materials)
+            {
+                material.SetFloat("Vector1_c1314484067849e9a0897c8e6b791b8b", -angle / 30);
+            }
         }
     }
 }
