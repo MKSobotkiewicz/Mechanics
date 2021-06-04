@@ -68,6 +68,7 @@ namespace Project.Map
             var masterSpline = new GameObject("AllRivers");
             var mf=masterSpline.AddComponent<MeshFilter>();
             var mr=masterSpline.AddComponent<MeshRenderer>();
+            //mr.receiveShadows = false;
             mr.material = allRivers[0].spline.GetComponent<MeshRenderer>().material;
             var combine = new CombineInstance[allRivers.Count];
             for (int i=0;i<allRivers.Count;i++)
@@ -76,6 +77,7 @@ namespace Project.Map
                 combine[i].transform = allRivers[i].spline.transform.localToWorldMatrix;
             }
             mf.mesh = new Mesh();
+            mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             mf.mesh.CombineMeshes(combine);
             foreach (var river in allRivers)
             {

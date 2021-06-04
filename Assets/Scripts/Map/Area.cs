@@ -24,6 +24,7 @@ namespace Project.Map
         private Mesh landformMesh;
 
         private static Area currentlySelectedArea;
+        private static readonly List<Area> allAreas = new List<Area>();
 
         private static readonly string selected = "Vector1_4b18e5eff33c4158af523be6ab56aacd";
         private static readonly string accesibility = "Vector1_a4b5e65b775c4fda98dfbe45254e6f0a";
@@ -38,6 +39,7 @@ namespace Project.Map
 
         public void Initialize(List<Area> areas)
         {
+            allAreas.Add(this);
             if (Neighbours.Count == 0)
             {
                 Debug.LogWarning(name+" is missing neighbours");
@@ -77,6 +79,32 @@ namespace Project.Map
             {
                 areaUI.Destroy();
             }
+        }
+
+        public Vector3 GetAreaOrNeighboursLowestPosition()
+        {
+            var areaAndNeighboursPositions = new List<Vector3>();
+            areaAndNeighboursPositions.Add(Position);
+            foreach (var neighbour in Neighbours)
+            {
+                areaAndNeighboursPositions.Add(neighbour.Position);
+            }
+            var distance = 99999f;
+            var lowest = new Vector3();
+            foreach (var pos in areaAndNeighboursPositions)
+            {
+                var currentDistance = pos.magnitude;
+                if (currentDistance <transform.position.magnitude)
+                {
+                    return transform.position;
+                }
+                if (currentDistance < distance)
+                {
+                    distance = currentDistance;
+                    lowest = pos;
+                }
+            }
+            return lowest;
         }
 
         public void SetGlobeVertices(int[] vertices)
@@ -152,6 +180,28 @@ namespace Project.Map
                 }
             }
             return neighboursOfType;
+        }
+
+        public static void OptimizeMeshes(List<Area> areas,string name)
+        {
+            var masterMesh = new GameObject(name);
+            var mf = masterMesh.AddComponent<MeshFilter>();
+            var mr = masterMesh.AddComponent<MeshRenderer>();
+            mr.material = areas[0].GetComponentInChildren<MeshRenderer>().material;
+            var combine = new CombineInstance[areas.Count];
+            for (int i = 0; i < areas.Count; i++)
+            {
+                combine[i].mesh = areas[i].GetComponentInChildren<MeshFilter>().mesh;
+                combine[i].transform = areas[i].transform.localToWorldMatrix;
+            }
+            mf.mesh = new Mesh();
+            mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mf.mesh.CombineMeshes(combine);
+            for (int i = 0; i < areas.Count; i++)
+            {
+                Destroy(areas[i].GetComponentInChildren<MeshFilter>());
+                Destroy(areas[i].GetComponentInChildren<MeshRenderer>());
+            }
         }
 
         private void GetNeighbours(List<Area> areas)
@@ -267,10 +317,10 @@ namespace Project.Map
                                                  new Vector2(0.933f,0.75f),
                                                  new Vector2(0.933f,0.25f),
                                                  new Vector2(0.5f, 0f)});
-                mesh.Optimize();
                 mesh.RecalculateNormals();
                 mesh.RecalculateTangents();
                 mesh.RecalculateBounds();
+                mesh.Optimize();
             }
             else if (points.Count > 4)
             {
@@ -280,6 +330,7 @@ namespace Project.Map
                 mesh.RecalculateNormals();
                 mesh.RecalculateTangents();
                 mesh.RecalculateBounds();
+                mesh.Optimize();
             }
             else
             {

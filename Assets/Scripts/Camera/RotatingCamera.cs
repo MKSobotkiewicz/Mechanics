@@ -37,18 +37,18 @@ namespace Project.Camera
 
         }
 
-        void Update()
+        void FixedUpdate()
         {
             float tiltX = tiltAroundX + Input.GetAxis("Vertical") * XAngleSpeed * CameraZoomTarget;
             if (tiltX < 45 && tiltX > -120)
                 tiltAroundX = tiltX;
             tiltAroundZ -= Input.GetAxis("Horizontal") * ZAngleSpeed * CameraZoomTarget;
             Quaternion target = Quaternion.Euler(tiltAroundX, tiltAroundZ, 0);
-            transform.rotation = Quaternion.Slerp(transform.rotation, target, UnityEngine.Time.fixedUnscaledDeltaTime * smooth);
+            transform.rotation = Quaternion.Slerp(transform.rotation, target, UnityEngine.Time.fixedDeltaTime * smooth);
 
             CameraZoomTarget = CameraZoomTarget - Input.GetAxis("Zoom") * CameraZoomSpeed;
             if (CameraZoomTarget < 1) CameraZoomTarget = 1f;
-            camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, CameraZoomTarget, UnityEngine.Time.fixedUnscaledDeltaTime * smooth);
+            camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, CameraZoomTarget, UnityEngine.Time.fixedDeltaTime * smooth);
         }
     }
 }

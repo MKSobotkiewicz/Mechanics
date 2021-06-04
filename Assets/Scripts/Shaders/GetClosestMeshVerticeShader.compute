@@ -1,6 +1,6 @@
 #pragma kernel CSMain
 
-#define IDS_PER_AREA 10
+#define IDS_PER_AREA 20
 
 
 RWStructuredBuffer<float3> Vertices;
@@ -34,8 +34,13 @@ void PushBackInt(inout int array[IDS_PER_AREA], int value, int index)
 [numthreads(64, 1, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
-	float distance[IDS_PER_AREA] = { 99999,99999,99999,99999,99999,99999,99999,99999,99999,99999 };
-	int verticeId[IDS_PER_AREA] = { 0,0,0,0,0,0,0,0,0,0 };
+	float distance[IDS_PER_AREA];
+	int verticeId[IDS_PER_AREA];
+	for (int i = 0; i < IDS_PER_AREA; i++) 
+	{
+		distance[i] = 9999;
+		verticeId[i] = 0;
+	}
 	for (uint i = 0; i < Vertices.Length; i++)
 	{
 		if (id.x == i)
@@ -53,14 +58,8 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 			}
 		}
 	}
-	VerticeIds[id.x * 10] = verticeId[0];
-	VerticeIds[id.x * 10 + 1] = verticeId[1];
-	VerticeIds[id.x * 10 + 2] = verticeId[2];
-	VerticeIds[id.x * 10 + 3] = verticeId[3];
-	VerticeIds[id.x * 10 + 4] = verticeId[4];
-	VerticeIds[id.x * 10 + 5] = verticeId[5];
-	VerticeIds[id.x * 10 + 6] = verticeId[6];
-	VerticeIds[id.x * 10 + 7] = verticeId[7];
-	VerticeIds[id.x * 10 + 8] = verticeId[8];
-	VerticeIds[id.x * 10 + 9] = verticeId[9];
+	for (int i = 0; i < IDS_PER_AREA;i++) 
+	{
+		VerticeIds[id.x * IDS_PER_AREA+i] = verticeId[i];
+	}
 }

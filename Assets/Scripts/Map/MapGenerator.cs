@@ -25,6 +25,8 @@ namespace Project.Map
 
         public void Start()
         {
+            Debug.Log(name + " creating climate, time: " + UnityEngine.Time.realtimeSinceStartup);
+            var PlanetConditions=Globe.PlanetConditions.GenerateRandom();
             Debug.Log(name + " creating areas, time: " + UnityEngine.Time.realtimeSinceStartup);
             CreateAreas();
             Debug.Log(name + " setting areas neighbour, time: " + UnityEngine.Time.realtimeSinceStartup);
@@ -33,11 +35,19 @@ namespace Project.Map
             SetAreasTypes();
             Debug.Log(name + " generating rivers, time: " + UnityEngine.Time.realtimeSinceStartup);
             GenerateRivers();
-            Debug.Log(name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
+            Debug.Log(name + " initializing areas, time: " + UnityEngine.Time.realtimeSinceStartup);
             foreach (var area in Areas)
             {
                 area.Initialize(Areas);
             }
+            Debug.Log(name + " optimizing areas meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
+            Area.OptimizeMeshes(WaterAreas, "Water Areas");
+            Area.OptimizeMeshes(MountainAreas, "Mountain Areas");
+            /*
+            var usableAreas = new List<Area>(PlainsAreas);
+            usableAreas.AddRange(HillsAreas);
+            Area.OptimizeMeshes(usableAreas, "Usable Areas");*/
+            Debug.Log(name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
 
             GetComponent<MeshRenderer>().enabled = false;
         }
@@ -57,8 +67,8 @@ namespace Project.Map
                 area.transform.position = vertice * transform.localScale.x;
                 area.SetGlobeMesh(MeshFilter.mesh);
 
-                var material = area.GetComponentInChildren<MeshRenderer>().material;
-                material.renderQueue = 3000 + ((i + 1) % 100);
+                //var material = area.GetComponentInChildren<MeshRenderer>().material;
+                //material.renderQueue = 3000 + ((i + 1) % 100);
 
                 Areas.Add(area);
                 i++;
@@ -104,7 +114,7 @@ namespace Project.Map
 
         private void SetAreasTypes()
         {
-            int idsPerArea = 10;
+            int idsPerArea = 20;
             Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
             var positions = new Vector3[Areas.Count];
             for (int i = 0; i < Areas.Count; i++)
@@ -140,23 +150,27 @@ namespace Project.Map
             for (int i = 0; i < Areas.Count; i++)
             {
                 Areas[i].SetType(colors[ids[i* idsPerArea]],this);
-                var verticesIds = new List<int>(ids).GetRange(i * idsPerArea, idsPerArea);
-                Areas[i].SetGlobeVertices(verticesIds.ToArray());
+                var verticesIds=new int[idsPerArea];
+                System.Array.Copy(ids, i * idsPerArea, verticesIds,0, idsPerArea);
+                Areas[i].SetGlobeVertices(verticesIds);
 
             }
             Debug.Log("  instantiating meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
             vertices = MeshFilter.mesh.vertices;
             for (int i = 0; i < Areas.Count; i++)
             {
-                var position = localToWorld.MultiplyPoint3x4(vertices[ids[i* idsPerArea]]);
+                var position = localToWorld.MultiplyPoint3x4(vertices[ids[i * idsPerArea]]);
                 Areas[i].Position = position;
+            }
+            for (int i = 0; i < Areas.Count; i++)
+            {
                 switch (Areas[i].Type)
                 {
                     case Area.EType.Mountains:
                         {
                             var j = random.Next(Mountains.Count);
                             var mountain = Instantiate(Mountains[j]);
-                            mountain.transform.position = position * 0.995f;
+                            mountain.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude/ Areas[i].Position.magnitude)) * 0.999f;
                             mountain.transform.LookAt(new Vector3(0, 0, 0));
                             mountain.GetComponentInChildren<MeshRenderer>().transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
                             mountain.transform.parent = MeshFilter.transform;
@@ -169,7 +183,7 @@ namespace Project.Map
                         {
                             var j = random.Next(Mountains.Count);
                             var hill = Instantiate(Hills[j]);
-                            hill.transform.position = position * 0.995f;
+                            hill.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude / Areas[i].Position.magnitude)) * 0.999f;
                             hill.transform.LookAt(new Vector3(0, 0, 0));
                             hill.GetComponentInChildren<MeshRenderer>().transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
                             hill.transform.parent = MeshFilter.transform;
