@@ -9,6 +9,7 @@ namespace Project.Globe
 {
     public class PlanetConditions : MonoBehaviour
     {
+        //public float StarMass;
         public float StarTemperature;
         public Color StarColor;
         public Color PlantColor;
@@ -46,7 +47,8 @@ namespace Project.Globe
             GetMainLight();
             GetSky();
             GetGlobe();
-            StarTemperature = 2500 + (float)(System.Math.Pow(random.NextDouble() * 3.6, 8) + System.Math.Pow(random.NextDouble() * 200, 1.5));
+            //StarMass = 0; 0.001f + (float)(System.Math.Pow(random.NextDouble() * 2.8, 3));
+            StarTemperature = /*StarMassToTemperature(StarMass);*/2500 + (float)(System.Math.Pow(random.NextDouble() * 3.45, 8) +random.NextDouble() * 3000);
             StarColor = StarTemperatureToColor(StarTemperature);
             StarType = GetStarType(StarTemperature);
             mainLight.colorTemperature = StarTemperature;
@@ -96,6 +98,32 @@ namespace Project.Globe
                 }
             }
             Debug.LogError("Missing Globe.");
+        }
+
+        private float StarMassToTemperature(float mass)
+        {
+            float a,m;
+            if (mass < 0.43)
+            {
+                m = 0.23f;
+                a = 2.3f;
+            }
+            else if (mass < 2)
+            {
+                m = 1f;
+                a = 4f;
+            }
+            else if (mass < 55)
+            {
+                m = 1.4f;
+                a = 3.5f;
+            }
+            else
+            {
+                m = 32000f;
+                a = 1f;
+            }
+            return m*Mathf.Pow(mass,a);//<-that's luminosity, not temperature yet.
         }
 
         private void SetColor(EAtmosphericComposition atmosphericComposition)

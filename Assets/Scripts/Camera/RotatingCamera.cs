@@ -16,6 +16,7 @@ namespace Project.Camera
 
         public float CameraZoomTarget = 40.0F;
         public float CameraZoomSpeed = 5.0F;
+        public float MaxZoom = 0.3f;
 
         private new UnityEngine.Camera camera;
 
@@ -47,7 +48,7 @@ namespace Project.Camera
             transform.rotation = Quaternion.Slerp(transform.rotation, target, UnityEngine.Time.fixedDeltaTime * smooth);
 
             CameraZoomTarget = CameraZoomTarget - Input.GetAxis("Zoom") * CameraZoomSpeed;
-            if (CameraZoomTarget < 1) CameraZoomTarget = 1f;
+            if (CameraZoomTarget < MaxZoom) CameraZoomTarget = MaxZoom;
             camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, CameraZoomTarget, UnityEngine.Time.fixedDeltaTime * smooth);
         }
     }
