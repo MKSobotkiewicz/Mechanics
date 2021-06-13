@@ -97,48 +97,52 @@ float StepSample(float3 value, float steps,float scale)
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
 	float3 vertice = Vertices[id.x];
-	float4 color = float4(1, 1, 0, 1);
+	float4 color = float4(0, 0, 0, 1);
 	float3 initialPos = vertice;
 	float waterNoise = StepSample(vertice+ float3(10000 * Seed, 10000 * Seed, 10000 * Seed), 5, 0.3)*0.01 + 0.957;
 	float noise= StepSample(vertice + float3(3000 * Seed, 3000 * Seed, 3000 * Seed),5,1)*0.1;
 	noise = (noise* noise*noise)*0.02 + 1.005;
 	float totalNoise = noise * waterNoise;
-	if (1/*totalNoise>1*/)
-	{
-		vertice *= sqrt(totalNoise);
+	vertice *= sqrt(totalNoise);
 
-		float mountainNoise = StepSample(vertice + float3(1000 * Seed, 1000 * Seed, 1000 * Seed), 5, 0.5) *0.5f;
-		//float mountainMapNoise = sqrt((StepSample(vertice + float3(2000 * Seed, 2000 * Seed, 2000 * Seed), 5, 0.7) + 100)*0.01 - 0.045);
-		float mountainMapNoise = StepSample(vertice + float3(2000 * Seed, 2000 * Seed, 2000 * Seed), 5, 0.5);
-		mountainMapNoise = (-((mountainMapNoise - 1)* (mountainMapNoise - 2)*(mountainMapNoise - 3)*(mountainMapNoise - 4))+0.2f);
-		if (totalNoise > 1&&mountainMapNoise > 1 && mountainNoise > 1)
+	float mountainNoise = StepSample(vertice + float3(1000 * Seed, 1000 * Seed, 1000 * Seed), 5, 0.5) *0.5f;
+	//float mountainMapNoise = sqrt((StepSample(vertice + float3(2000 * Seed, 2000 * Seed, 2000 * Seed), 5, 0.7) + 100)*0.01 - 0.045);
+	float mountainMapNoise = StepSample(vertice + float3(2000 * Seed, 2000 * Seed, 2000 * Seed), 5, 0.5);
+	mountainMapNoise = (-((mountainMapNoise - 1)* (mountainMapNoise - 2)*(mountainMapNoise - 3)*(mountainMapNoise - 4))+0.2f);
+	if (totalNoise > 1&&mountainMapNoise > 1 && mountainNoise > 1)
+	{
+		//vertice *= sqrt((mountainNoise*mountainMapNoise));
+		color = float4(1, 0, 0, 1);
+	} else if (totalNoise > 1 && mountainMapNoise > 0.5f/* && mountainNoise > 0.5f*/)
+	{
+		//vertice *= sqrt((mountainNoise*mountainMapNoise));
+		color = float4(0.5f, 0, 0, 1);
+	}
+	else if(totalNoise > 1)
+	{
+		float riverNoise = StepSample(vertice + float3(5000 * Seed, 5000 * Seed, 5000 * Seed), 5, 0.5);
+		riverNoise = (-((riverNoise - 1)* (riverNoise - 2)*(riverNoise - 3)*(riverNoise - 4))+0)*0.005;
+		if (riverNoise > 0) 
 		{
-			//vertice *= sqrt((mountainNoise*mountainMapNoise));
-			color = float4(1, 0, 0, 1);
-		} else if (totalNoise > 1 && mountainMapNoise > 0.5f/* && mountainNoise > 0.5f*/)
-		{
-			//vertice *= sqrt((mountainNoise*mountainMapNoise));
-			color = float4(0.5f, 0, 0, 1);
-		}
-		else if(totalNoise > 1)
-		{
-			float riverNoise = StepSample(vertice + float3(5000 * Seed, 5000 * Seed, 5000 * Seed), 5, 0.5);
-			riverNoise = (-((riverNoise - 1)* (riverNoise - 2)*(riverNoise - 3)*(riverNoise - 4))+0)*0.005;
-			if (riverNoise > 0) 
+			vertice *= 1-riverNoise;
+			if (sqrt(vertice.x*vertice.x + vertice.y * vertice.y + vertice.z * vertice.z) < sqrt(initialPos.x*initialPos.x + initialPos.y * initialPos.y + initialPos.z * initialPos.z))
 			{
-				vertice *= 1-riverNoise;
-				if (sqrt(vertice.x*vertice.x + vertice.y * vertice.y + vertice.z * vertice.z) < sqrt(initialPos.x*initialPos.x + initialPos.y * initialPos.y + initialPos.z * initialPos.z))
-				{
-					//vertice = initialPos;
-					color = float4(0, 1, 1, 1);
-				}
+				//vertice = initialPos;
+				color = float4(0, 0, 1, 1);
 			}
 		}
-		else 
-		{
-			color = float4(0, 0, 1, 1);
-		}
 	}
+	else 
+	{
+		color = float4(0, 0, 1,1);
+	}
+	float desertNoise = StepSample(vertice + float3(11000 * Seed, 11000 * Seed, 11000 * Seed), 5, 0.2) *0.1;
+	color.a = clamp(totalNoise/20 * clamp(-50*(vertice.z + 0.25+ desertNoise)*(vertice.z - 0.15+ desertNoise)*(vertice.z + 0.15- desertNoise)*(vertice.z - 0.25- desertNoise),0,1), 0, 1);
+	color.a +=0.1*clamp(totalNoise / 20 * clamp(-50 * (vertice.z + 0.35 + desertNoise)*(vertice.z - 0.25 + desertNoise)*(vertice.z + 0.25 - desertNoise)*(vertice.z - 0.35 - desertNoise), 0, 1), 0, 1);
+	/*if ((vertice.x>0.2&&vertice.x < 0.35)|| (vertice.x < -0.2&&vertice.x > -0.35))
+	{
+		color.a += 0.5;
+	}*/
 
 	float warpNoise1 = StepSample(vertice + float3(8000 * Seed, 8000 * Seed, 8000 * Seed), 5, 2)*0.003;
 	float warpNoise2 = StepSample(vertice + float3(9000 * Seed, 9000 * Seed, 9000 * Seed), 5, 2)*0.003;

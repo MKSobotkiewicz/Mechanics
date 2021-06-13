@@ -15,7 +15,7 @@ namespace Project.Globe
             {
                 Debug.LogError(name + " missing Time.");
             }
-            Time.Dailies.Add(this);
+            Time.AddDaily(this);
             materials.Add(GetComponent<MeshRenderer>().material);
         }
 
@@ -26,7 +26,7 @@ namespace Project.Globe
 
         public int Priority()
         {
-            return 1;
+            return 23;
         }
 
         public void DailyUpdate()

@@ -1,6 +1,6 @@
 #pragma kernel CSMain
 
-#define IDS_PER_AREA 20
+#define IDS_PER_AREA 40
 
 
 RWStructuredBuffer<float3> Vertices;
@@ -15,18 +15,18 @@ float Distance(float3 pos1, float3 pos2)
 
 void PushBackFloat(inout float array[IDS_PER_AREA], float value,int index)
 {
-	for (int i= array.Length - 2;i>= index;i--)
+	for (int i= array.Length - 1;i> index;i--)
 	{
-		array[i+1] = array[i];
+		array[i]= array[i - 1];
 	}
 	array[index] = value;
 }
 
 void PushBackInt(inout int array[IDS_PER_AREA], int value, int index)
 {
-	for (int i = array.Length - 2; i >= index; i--)
+	for (int i = array.Length - 1; i > index; i--)
 	{
-		array[i+1] = array[i];
+		array[i] = array[i - 1];
 	}
 	array[index] = value;
 }

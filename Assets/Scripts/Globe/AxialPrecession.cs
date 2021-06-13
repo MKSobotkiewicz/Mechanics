@@ -14,12 +14,12 @@ namespace Project.Globe
             {
                 Debug.LogError(name+" missing Time.");
             }
-            Time.Dailies.Add(this);
+            Time.AddDaily(this);
         }
 
         public int Priority()
         {
-            return 0;
+            return 22;
         }
 
         public void DailyUpdate()

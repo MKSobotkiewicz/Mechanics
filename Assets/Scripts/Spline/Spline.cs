@@ -46,6 +46,7 @@ namespace Project.Spline
             SoftenPoints();
             DividePoints();
             GenerateMesh();
+
         }
 
         public void SetMaterial(UnityEngine.Material material)
@@ -74,6 +75,11 @@ namespace Project.Spline
 
         private List<Vector3> SoftenStep(List<Vector3> points)
         {
+            if (points.Count == 0)
+            {
+                Debug.LogWarning("Trying to soften zero length list of points.");
+                return points;
+            }
             var newPoints = new List<Vector3>();
             newPoints.Add(points[0]);
             for (int i=0;i< points.Count-1;i++)
@@ -202,7 +208,7 @@ namespace Project.Spline
             mesh.SetNormals(vertices);
 
             mesh.Optimize();
-            //mesh.RecalculateNormals();
+            mesh.RecalculateNormals();
             mesh.RecalculateTangents();
             mesh.RecalculateBounds();
 

@@ -8,20 +8,25 @@ namespace Project.Map
 {
     public class Area : MonoBehaviour,Utility.IClicable
     {
-        public List<Area> Neighbours = new List<Area>();
-        public EType Type;
+        public List<Area> Neighbours { get; private set; } = new List<Area>();
+        public EType Type { get; private set; }
         public Color WaterTilesColor;
         public Color MountainTilesColor;
         public Color PlainsTilesColor;
         public UI.Area AreaUIPrefab;
         public Vector3 Position;
         public River River;
+        public float Humidity;
+        public Resources.ResourceDepot ResourceDepot { get; private set; }
+        public List<Resources.ResourceGenerator> ResourceGenerators { get; private set; } = new List<Resources.ResourceGenerator>();
+        public bool Road = false;
 
         private UnityEngine.Material material;
         private UI.Area areaUI;
         private int[] globeVertices;
         private Mesh globeMesh;
         private Mesh landformMesh;
+        private Time.Time time;
 
         private static Area currentlySelectedArea;
         private static readonly List<Area> allAreas = new List<Area>();
@@ -35,6 +40,14 @@ namespace Project.Map
         public void Awake()
         {
             material = GetComponentInChildren<MeshRenderer>().material;
+        }
+
+        public void SetTime(Time.Time _time)
+        {
+            time = _time;
+            ResourceDepot = Resources.ResourceDepot.Create(time);
+            ResourceDepot.transform.parent = transform;
+            ResourceDepot.transform.localPosition = new Vector3();
         }
 
         public void Initialize(List<Area> areas)
@@ -59,11 +72,10 @@ namespace Project.Map
             {
                 return;
             }
-            Debug.Log(name + " selected");
             material.SetFloat(selected, 1f);
             var canvas = UnityEngine.Camera.main.GetComponentInChildren<Canvas>();
             areaUI=Instantiate(AreaUIPrefab,canvas.transform);
-            areaUI.SetName(name);
+            areaUI.SetName(Humidity.ToString());
             if (currentlySelectedArea != null)
             {
                 currentlySelectedArea.Unselect();
@@ -73,7 +85,6 @@ namespace Project.Map
 
         public void Unselect()
         {
-            UnityEngine.Debug.Log(name+" unselected");
             material.SetFloat(selected, 0f);
             if (areaUI != null)
             {
@@ -164,6 +175,30 @@ namespace Project.Map
             Neighbours = neighbours;
         }
 
+        public List<Tuple<Area, float>> GetNeighboursWithDistance()
+        {
+            var neighboursWithDistance = new List<Tuple<Area, float>>();
+            foreach (var neighbour in Neighbours)
+            {
+                if (neighbour.Road)
+                {
+                    neighboursWithDistance.Add(new Tuple<Area, float>(neighbour, 0.5f));
+                    continue;
+                }
+                if (neighbour.Type == EType.Plains)
+                {
+                    neighboursWithDistance.Add(new Tuple<Area, float>(neighbour,1));
+                    continue;
+                }
+                if (neighbour.Type == EType.Hills)
+                {
+                    neighboursWithDistance.Add(new Tuple<Area, float>(neighbour, 2));
+                    continue;
+                }
+            }
+            return neighboursWithDistance;
+        }
+
         public float Distance(Area area)
         {
             return Vector3.Distance(transform.localPosition, area.transform.localPosition);
@@ -245,20 +280,31 @@ namespace Project.Map
             {
                 Type = EType.Water;
             }
-            else if (vertexColor==new Color(1,0,0,1))
+            else if (vertexColor.r==1)
             {
                 Type = EType.Mountains;
+                Humidity = 1-vertexColor.a;
             }
-            else if(vertexColor == new Color(0.5f, 0, 0, 1))
+            else if(vertexColor.r == 0.5f)
             {
                 Type = EType.Hills;
+                Humidity = 1 - Mathf.Clamp(vertexColor.a*100,0,1);
             }
             else
             {
                 Type = EType.Plains;
+                Humidity = 1 - Mathf.Clamp(vertexColor.a * 100, 0, 1);
             }
             SetColor();
             AddAreaToMapGeneratorAreaLists(mapGenerator);
+        }
+
+        public void AddResourceGenerator(Resources.ResourceGeneratorType resourceGeneratorType)
+        {
+            var rg = Resources.ResourceGenerator.Create(ResourceDepot, resourceGeneratorType, time);
+            rg.transform.parent = transform;
+            rg.transform.localPosition = new Vector3();
+            ResourceGenerators.Add(rg);
         }
 
         private void AddAreaToMapGeneratorAreaLists(MapGenerator mapGenerator)
@@ -292,7 +338,7 @@ namespace Project.Map
                 {
                     if (Neighbours.Contains(current.Neighbours[i]) && (!doneNeighbous.Contains(current.Neighbours[i])||(current.Neighbours[i] == Neighbours[0]&&j>3)))
                     {
-                        var point = (transform.position + current.transform.position + current.Neighbours[i].transform.position) / 3;
+                        var point = (Position + current.Position + current.Neighbours[i].Position) / 3;
                         points.Add(worldToLocal.MultiplyPoint3x4(point));
 
                         doneNeighbous.Add(current);

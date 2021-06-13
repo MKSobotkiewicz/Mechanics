@@ -11,9 +11,9 @@ namespace Project.Resources
         [SerializeField]
         public Resource Resource;
         [SerializeField]
-        public uint Value;
+        public ulong Value;
 
-        public ResourceValue(Resource resource,uint value=0)
+        public ResourceValue(Resource resource,ulong value=0)
         {
             Resource = resource;
             Value = value;

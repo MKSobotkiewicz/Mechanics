@@ -15,6 +15,9 @@ namespace Project.Globe
         public Color PlantColor;
         public EStarType StarType;
         public EAtmosphericComposition AtmosphericComposition;
+        public Map.MapGenerator MapGenerator;
+
+        public static readonly string GlobeMaterialPlantColorName = "Color_063f584e3c224c738862528b5b271d6c";
 
         private Light mainLight;
         private PhysicallyBasedSky physicallyBasedSky;
@@ -25,7 +28,6 @@ namespace Project.Globe
         private static readonly Color yellowAirTint = new Color(1f, 1f, 0.9f);
         private static readonly Color yellowGreenAirTint = new Color(0.65f, 1f, 0.35f);
         private static readonly Color brownAirTint = new Color(0.5f, 0.4f, 0.3f);
-        private static readonly string globeMaterialPlantColorName = "Color_063f584e3c224c738862528b5b271d6c";
         private static readonly System.Random random = new System.Random();
 
         static public PlanetConditions GenerateRandom()
@@ -55,7 +57,7 @@ namespace Project.Globe
             SetAtmosphericComposition();
             SetColor(AtmosphericComposition);
             PlantColor = WaveLengthToColor(TemperatureToWavelength(StarTemperature) * 0.9f);
-            globe.material.SetColor("Color_063f584e3c224c738862528b5b271d6c", PlantColor);
+            globe.material.SetColor(GlobeMaterialPlantColorName, PlantColor);
         }
 
         private void GetMainLight()

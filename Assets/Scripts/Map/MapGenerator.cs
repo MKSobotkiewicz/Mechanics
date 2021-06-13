@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +9,9 @@ namespace Project.Map
     public class MapGenerator : MonoBehaviour
     {
         public GameObject AreaPrefab;
+        public Resources.ResourceGeneratorType RiverGeneratorTypePrefab;
+        public Time.Time Time;
+        public CitiesGenerator CitiesGenerator;
         public List<Area> Areas = new List<Area>();
         public List<Area> WaterAreas = new List<Area>();
         public List<Area> MountainAreas = new List<Area>();
@@ -16,17 +21,20 @@ namespace Project.Map
         public MeshFilter MeshFilter;
         public Globe.SnowMovement SnowMovement;
         public UnityEngine.Material RiverMaterial;
+        public UnityEngine.Material RoadMaterial;
         public ComputeShader DistanceShader;
         public ComputeShader NeighbourShader;
         public List<GameObject> Mountains;
         public List<GameObject> Hills;
+
+        private Globe.PlanetConditions PlanetConditions;
 
         private static readonly System.Random random = new System.Random();
 
         public void Start()
         {
             Debug.Log(name + " creating climate, time: " + UnityEngine.Time.realtimeSinceStartup);
-            var PlanetConditions=Globe.PlanetConditions.GenerateRandom();
+            PlanetConditions = Globe.PlanetConditions.GenerateRandom();
             Debug.Log(name + " creating areas, time: " + UnityEngine.Time.realtimeSinceStartup);
             CreateAreas();
             Debug.Log(name + " setting areas neighbour, time: " + UnityEngine.Time.realtimeSinceStartup);
@@ -43,10 +51,10 @@ namespace Project.Map
             Debug.Log(name + " optimizing areas meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
             Area.OptimizeMeshes(WaterAreas, "Water Areas");
             Area.OptimizeMeshes(MountainAreas, "Mountain Areas");
-            /*
-            var usableAreas = new List<Area>(PlainsAreas);
-            usableAreas.AddRange(HillsAreas);
-            Area.OptimizeMeshes(usableAreas, "Usable Areas");*/
+            Debug.Log(name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
+            var cities=CitiesGenerator.Generate(PlainsAreas);
+            Debug.Log(name + " generating roads, time: " + UnityEngine.Time.realtimeSinceStartup);
+            GenerateRoads(cities);
             Debug.Log(name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
 
             GetComponent<MeshRenderer>().enabled = false;
@@ -63,6 +71,7 @@ namespace Project.Map
                 var go = Instantiate(AreaPrefab);
                 go.name = "Area " + i.ToString();
                 var area = go.GetComponent<Area>();
+                area.SetTime(Time);
                 area.transform.parent = transform;
                 area.transform.position = vertice * transform.localScale.x;
                 area.SetGlobeMesh(MeshFilter.mesh);
@@ -73,6 +82,25 @@ namespace Project.Map
                 Areas.Add(area);
                 i++;
             }
+        }
+
+        public void SetMeshesColors(Color color)
+        {
+            foreach (var mountain in Mountains)
+            {
+                mountain.GetComponentInChildren<MeshRenderer>().sharedMaterial.SetColor("Color_3a1ee222bd634d87aa92e46c379001ab",color);
+            }
+            foreach (var hill in Hills)
+            {
+                hill.GetComponentInChildren<MeshRenderer>().sharedMaterial.SetColor("Color_3a1ee222bd634d87aa92e46c379001ab", color);
+            }
+        }
+
+        private List<Area> PossibleAreas()
+        {
+            var possibleAreas = new List<Area>(PlainsAreas);
+            possibleAreas.AddRange(HillsAreas);
+            return possibleAreas;
         }
 
         private void SetAreasNeighbours()
@@ -114,7 +142,7 @@ namespace Project.Map
 
         private void SetAreasTypes()
         {
-            int idsPerArea = 20;
+            int idsPerArea = 40;
             Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
             var positions = new Vector3[Areas.Count];
             for (int i = 0; i < Areas.Count; i++)
@@ -172,11 +200,14 @@ namespace Project.Map
                             var mountain = Instantiate(Mountains[j]);
                             mountain.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude/ Areas[i].Position.magnitude)) * 0.999f;
                             mountain.transform.LookAt(new Vector3(0, 0, 0));
-                            mountain.GetComponentInChildren<MeshRenderer>().transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
+                            var mr = mountain.GetComponentInChildren<MeshRenderer>();
+                            mr.transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
+                            mr.material.SetColor(Globe.PlanetConditions.GlobeMaterialPlantColorName, PlanetConditions.PlantColor);
                             mountain.transform.parent = MeshFilter.transform;
                             mountain.transform.localScale /= 3;
-                            SnowMovement.AddMaterial(mountain.GetComponentInChildren<MeshRenderer>().material);
+                            SnowMovement.AddMaterial(mr.material);
                             Areas[i].SetLandformMesh(mountain.GetComponentInChildren<MeshFilter>().mesh);
+                            Areas[i].SetLandformVerticesColor(MeshFilter.mesh.colors[ids[i * idsPerArea]]);
                             break;
                         }
                     case Area.EType.Hills:
@@ -185,11 +216,14 @@ namespace Project.Map
                             var hill = Instantiate(Hills[j]);
                             hill.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude / Areas[i].Position.magnitude)) * 0.999f;
                             hill.transform.LookAt(new Vector3(0, 0, 0));
-                            hill.GetComponentInChildren<MeshRenderer>().transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
+                            var mr = hill.GetComponentInChildren<MeshRenderer>();
+                            mr.transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
+                            mr.material.SetColor(Globe.PlanetConditions.GlobeMaterialPlantColorName, PlanetConditions.PlantColor);
                             hill.transform.parent = MeshFilter.transform;
                             hill.transform.localScale /= 3;
-                            SnowMovement.AddMaterial(hill.GetComponentInChildren<MeshRenderer>().material);
+                            SnowMovement.AddMaterial(mr.material);
                             Areas[i].SetLandformMesh(hill.GetComponentInChildren<MeshFilter>().mesh);
+                            Areas[i].SetLandformVerticesColor(MeshFilter.mesh.colors[ids[i * idsPerArea]]);
                             break;
                         }
                 }
@@ -214,21 +248,15 @@ namespace Project.Map
                 }
             }
             var vertices = new List<int>();
-            var color = new Color(0,1,0,1);
-            foreach (var area in PlainsAreas)
+            var color = new Color(0,1,0,0);
+            foreach (var area in PossibleAreas())
             {
                 if (area.River != null)
                 {
                     vertices.AddRange(area.GetGlobeVertices());
                     area.SetLandformVerticesColor(color);
-                }
-            }
-            foreach (var area in HillsAreas)
-            {
-                if (area.River != null)
-                {
-                    vertices.AddRange(area.GetGlobeVertices());
-                    area.SetLandformVerticesColor(color);
+                    area.Humidity = 1;
+                    area.AddResourceGenerator(RiverGeneratorTypePrefab);
                 }
             }
             var colors = MeshFilter.mesh.colors;
@@ -236,12 +264,59 @@ namespace Project.Map
             {
                 if (colors[vertice].b != 1)
                 {
-                    colors[vertice] = color;
+                    colors[vertice] += color;
                 }
             }
             MeshFilter.mesh.SetColors(colors);
 
             River.OptimizeAllRivers();
+        }
+
+        private void GenerateRoads(List<City> cities)
+        {
+            var pairs = new HashSet<Tuple<Area, Area>>();
+            var areas = new List<Area>();
+            foreach (var city in cities)
+            {
+                areas.Add(city.Area);
+            }
+            foreach (var area1 in areas)
+            {
+                foreach (var area2 in areas)
+                {
+                    if (area1== area2)
+                    {
+                        continue;
+                    }
+                    if (Vector3.Distance(area1.Position, area2.Position)>2000)
+                    {
+                        continue;
+                    }
+                    if (pairs.Contains(new Tuple<Area, Area>(area2, area1)))
+                    {
+                        continue;
+                    }
+                    pairs.Add(new Tuple<Area, Area>(area1, area2));
+                }
+            }
+            foreach (var pair in pairs)
+            {
+                try
+                {
+                    var road = new Road(pair.Item1, pair.Item2, PossibleAreas(), transform, RoadMaterial);
+                }
+                catch (IOException e)
+                {
+                    if (e.Source != null)
+                    {
+                        Debug.LogWarning("IOException source: " + e.Source);
+                    }
+                }
+                catch
+                {
+                }
+            }
+            Road.OptimizeAllRoads();
         }
     }
 }

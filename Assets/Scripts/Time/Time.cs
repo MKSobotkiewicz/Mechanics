@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Project.Time
@@ -17,7 +16,16 @@ namespace Project.Time
         [Range(0, 1000)]
         public uint Speed=0;
 
-        public List<IDaily> Dailies=new List<IDaily>();
+        public Dictionary<float, List<IDaily>> Dailies { get; private set; }
+
+        public void Awake()
+        {
+            Dailies = new Dictionary<float, List<IDaily>>();
+            for (int i = 0; i < 24; i++)
+            {
+                Dailies.Add(i,new List<IDaily>());
+            }
+        }
 
         public void FixedUpdate()
         {
@@ -26,12 +34,12 @@ namespace Project.Time
             {
                 Minute -= 60;
                 Hour += 1;
+                UpdateDailies(Hour%24);
             }
             while (Hour >= 24)
             {
                 Hour -= 24;
                 Day += 1;
-                UpdateDailies();
             }
             while (Day >= (Year%4==0 ? 366 : 365))
             {
@@ -40,30 +48,21 @@ namespace Project.Time
             }
         }
 
+        public void AddDaily(IDaily daily)
+        {
+            Dailies[daily.Priority()].Add(daily);
+        }
+
         public uint GetThisYearsDayCount()
         {
             return (uint)(Year % 4 == 0 ? 366 : 365);
         }
 
-        private void UpdateDailies()
+        private void UpdateDailies(uint hour)
         {
-            var dailies = new List<IDaily>(Dailies);
-            int priority = 0;
-            while (dailies.Count > 0)
+            for (int i = 0; i < Dailies[hour].Count; i++)
             {
-                for (int i=0;i< dailies.Count;i++)
-                {
-                    if (dailies[i] == null)
-                    {
-                        continue;
-                    }
-                    if(priority== dailies[i].Priority())
-                    {
-                        dailies[i].DailyUpdate();
-                        dailies.RemoveAt(i);
-                    }
-                }
-                priority++;
+                Dailies[hour][i].DailyUpdate();
             }
         }
     }

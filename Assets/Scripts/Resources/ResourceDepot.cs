@@ -39,7 +39,7 @@ namespace Project.Resources
         public static ResourceDepot Create(Time.Time Time)
         {
             var rd = new GameObject("ResourceDepot " + count++.ToString()).AddComponent<ResourceDepot>() as ResourceDepot;
-            Time.Dailies.Add(rd);
+            Time.AddDaily(rd);
             return rd;
         }
 

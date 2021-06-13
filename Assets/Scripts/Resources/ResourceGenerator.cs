@@ -44,7 +44,7 @@ namespace Project.Resources
             resourceDepot = _resourceDepot;
             resourceGeneratorType = _resourceGeneratorType;
             transform.parent = resourceDepot.transform;
-            Time.Dailies.Add(this);
+            Time.AddDaily(this);
             return this;
         }
 
@@ -67,7 +67,7 @@ namespace Project.Resources
         {
             if (!initialized)
             {
-                Debug.LogWarning(name+" not initialized");
+                Debug.LogError(name+" not initialized");
                 return;
             }
             if (!enabled)

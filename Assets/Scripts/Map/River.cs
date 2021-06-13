@@ -10,10 +10,11 @@ namespace Project.Map
     {
         public List<Area> Areas = new List<Area>();
 
-        private static readonly System.Random random = new System.Random();
-        private static int RiverCount=0;
         private readonly River riverItConnectsTo = null;
         private Spline.Spline spline;
+
+        private static readonly System.Random random = new System.Random();
+        private static int riverCount = 0;
 
         private static readonly List<River> allRivers = new List<River>();
 
@@ -30,9 +31,7 @@ namespace Project.Map
                 }
                 if (next.River != null&&next.Type!=Area.EType.Water)
                 {
-                    //Areas.Add(next);
                     riverItConnectsTo = next.River;
-                    //Debug.Log("Stopped at river. Length: " + Areas.Count);
                     var index = next.River.Areas.IndexOf(next);
                     var rest = next.River.Areas.GetRange(index, next.River.Areas.Count - index);
                     Areas.AddRange(rest);
@@ -46,7 +45,6 @@ namespace Project.Map
                 maxLenght--;
                 if (current.Type == Area.EType.Water)
                 {
-                    //Debug.Log("Stopped at water. Length: " + Areas.Count);
                     if (Areas.Count < 5)
                     {
                         Fail();
@@ -68,7 +66,6 @@ namespace Project.Map
             var masterSpline = new GameObject("AllRivers");
             var mf=masterSpline.AddComponent<MeshFilter>();
             var mr=masterSpline.AddComponent<MeshRenderer>();
-            //mr.receiveShadows = false;
             mr.material = allRivers[0].spline.GetComponent<MeshRenderer>().material;
             var combine = new CombineInstance[allRivers.Count];
             for (int i=0;i<allRivers.Count;i++)
@@ -100,14 +97,13 @@ namespace Project.Map
         private void CreateMesh(Transform parent, UnityEngine.Material material)
         {
             int nodeCount = 0;
-            spline = (new GameObject("River "+ RiverCount++)).AddComponent<Spline.Spline>();
+            spline = (new GameObject("River "+ riverCount++)).AddComponent<Spline.Spline>();
             spline.transform.parent = parent;
             for (int i=1;i<Areas.Count;i++)
             {
                 var node=(new GameObject("Node "+ nodeCount++)).AddComponent<Spline.SplineNode>();
                 node.transform.parent = spline.transform;
                 node.transform.position = Areas[i].Position;
-                //node.transform.position = Quaternion.Euler((float)random.NextDouble() * 0.2f - 0.1f, (float)random.NextDouble() * 0.2f - 0.1f, (float)random.NextDouble() * 0.2f - 0.1f) *Areas[i].Position;
             }
             spline.Generate(30,10,1,true);
             spline.SetMaterial(material);
