@@ -40,7 +40,7 @@ namespace Project.Globe
 
         static public float TemperatureToWavelength(float temperature)
         {
-            Debug.Log(2898000 / temperature);
+            //Debug.Log(2898000 / temperature);
             return 2898000 / temperature;
         }
 
@@ -352,7 +352,7 @@ namespace Project.Globe
                 factor = 0.0f;
             }*/
             factor =1f;
-            Debug.Log(red+" "+green+" "+blue);
+            //Debug.Log(red+" "+green+" "+blue);
             red = Mathf.Clamp01(Mathf.Pow(red * factor, gamma));
             green = Mathf.Clamp01(Mathf.Pow(green * factor, gamma));
             blue = Mathf.Clamp01(Mathf.Pow(blue * factor, gamma));

@@ -207,7 +207,7 @@ namespace Project.Map
                             mountain.transform.localScale /= 3;
                             SnowMovement.AddMaterial(mr.material);
                             Areas[i].SetLandformMesh(mountain.GetComponentInChildren<MeshFilter>().mesh);
-                            Areas[i].SetLandformVerticesColor(MeshFilter.mesh.colors[ids[i * idsPerArea]]);
+                            Areas[i].SetLandformVerticesColor(colors[ids[i * idsPerArea]]);
                             break;
                         }
                     case Area.EType.Hills:
@@ -223,7 +223,7 @@ namespace Project.Map
                             hill.transform.localScale /= 3;
                             SnowMovement.AddMaterial(mr.material);
                             Areas[i].SetLandformMesh(hill.GetComponentInChildren<MeshFilter>().mesh);
-                            Areas[i].SetLandformVerticesColor(MeshFilter.mesh.colors[ids[i * idsPerArea]]);
+                            Areas[i].SetLandformVerticesColor(colors[ids[i * idsPerArea]]);
                             break;
                         }
                 }
@@ -317,6 +317,7 @@ namespace Project.Map
                 }
             }
             Road.OptimizeAllRoads();
+            Utility.Pathfinder.LogSpentTime();
         }
     }
 }

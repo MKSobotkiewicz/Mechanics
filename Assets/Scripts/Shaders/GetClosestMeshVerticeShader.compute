@@ -41,14 +41,14 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 		distance[i] = 9999;
 		verticeId[i] = 0;
 	}
-	for (uint i = 0; i < Vertices.Length; i++)
+	for (int i = 0; i < Vertices.Length; i++)
 	{
 		if (id.x == i)
 		{
 			continue;
 		}
 		float newDistance = Distance(Positions[id.x], Vertices[i]);
-		for (uint j = 0; j < IDS_PER_AREA; j++)
+		for (int j = 0; j < IDS_PER_AREA; j++)
 		{
 			if (newDistance < distance[j])
 			{

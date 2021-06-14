@@ -140,27 +140,13 @@ namespace Project.Map
 
         public void SetLandformVerticesColor(Color color)
         {
-            //WTF IS WRONG WITH MY BRAIN!!!
-            //I will leave this part for some time here so to remember me of my retardness
-            /*foreach (var vertice in globeVertices)
-            {
-                if (globeMesh.colors[vertice].b !=1)
-                {
-                    var colors = globeMesh.colors;
-                    for (int i = 0; i < globeVertices.Length; i++)
-                    {
-                        colors[globeVertices[i]] = color;
-                    }
-                    globeMesh.SetColors(colors);
-                }
-            }*/
             if (landformMesh != null)
             {
                 var count = landformMesh.vertices.Length;
-                var landformMeshColor = new List<Color>();
+                var landformMeshColor = new Color[count];
                 for (int i=0;i< count; i++)
                 {
-                    landformMeshColor.Add(color);
+                    landformMeshColor[i]=color;
                 }
                 landformMesh.SetColors(landformMeshColor);
             }

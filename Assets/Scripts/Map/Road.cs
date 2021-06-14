@@ -19,11 +19,11 @@ namespace Project.Map
 
         public Road(Area start, Area target,List<Area> possibleAreas, Transform parent, UnityEngine.Material material)
         {
-            Debug.Log("looking for path");
+            //Debug.Log("looking for path");
             Areas = Utility.Pathfinder.FindPath(start,target, possibleAreas);
             if (Areas == null)
             {
-                Debug.Log("no path");
+                //Debug.Log("no path");
                 Fail();
             }
             CreateMesh(parent, material);
@@ -32,12 +32,10 @@ namespace Project.Map
             {
                 area.Road = true;
             }
-            Debug.Log(allRoads.Count);
         }
 
         public static void OptimizeAllRoads()
         {
-            Debug.Log(allRoads.Count);
             if (allRoads.Count == 0)
             {
                 Debug.LogWarning("No roads to optimize.");
@@ -69,7 +67,7 @@ namespace Project.Map
 
         private void CreateMesh(Transform parent, UnityEngine.Material material)
         {
-            Debug.Log("Areas count: "+ Areas.Count);
+            //Debug.Log("Areas count: "+ Areas.Count);
             int nodeCount = 0;
             spline = (new GameObject("Road " + roadCount++)).AddComponent<Spline.Spline>();
             spline.transform.parent = parent;

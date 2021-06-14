@@ -9,9 +9,18 @@ namespace Project.Utility
 {
     public static class Pathfinder
     {
+        private static float spentTime = 0;
+
+        public static void LogSpentTime()
+        {
+            Debug.Log("Pathfinder spent time: "+ spentTime);
+        }
 
         public static List<Area> FindPath(Area start, Area goal, List<Area> areas)
         {
+            float startTime = UnityEngine.Time.realtimeSinceStartup;
+            float stopTime;
+
             Dictionary<Area, float> distance = new Dictionary<Area, float>();
             Dictionary<Area, Area> previous = new Dictionary<Area, Area>();
 
@@ -58,19 +67,22 @@ namespace Project.Utility
             }
             if (previous[goal] == null)
             {
-                Debug.Log("Cant Reach Goal.");
+                //Debug.Log("Cant Reach Goal.");
+                stopTime = UnityEngine.Time.realtimeSinceStartup;
+                spentTime += stopTime - startTime;
                 return null;
             }
-            Debug.Log("Reached Goal.");
+            //Debug.Log("Reached Goal.");
             Path = new List<Area>();
             Area current = goal;
             while (current != null)
             {
-                Debug.Log(current);
                 Path.Add(current);
                 current = previous[current];
             }
             Path.Reverse();
+            stopTime = UnityEngine.Time.realtimeSinceStartup;
+            spentTime += stopTime - startTime;
             return Path;
         }
     }
