@@ -12,12 +12,13 @@ namespace Project.Map
         public Resources.ResourceGeneratorType RiverGeneratorTypePrefab;
         public Time.Time Time;
         public CitiesGenerator CitiesGenerator;
-        public List<Area> Areas = new List<Area>();
-        public List<Area> WaterAreas = new List<Area>();
-        public List<Area> MountainAreas = new List<Area>();
-        public List<Area> HillsAreas = new List<Area>();
-        public List<Area> PlainsAreas = new List<Area>();
-        public List<River> Rivers = new List<River>();
+        public List<Area> Areas { get; private set; } = new List<Area>();
+        public List<Area> WaterAreas { get; private set; } = new List<Area>();
+        public List<Area> MountainAreas { get; private set; } = new List<Area>();
+        public List<Area> HillsAreas { get; private set; } = new List<Area>();
+        public List<Area> PlainsAreas { get; private set; } = new List<Area>();
+        public List<River> Rivers { get; private set; } = new List<River>();
+        public List<AreaGroup> AreaGroups { get; private set; } = new List<AreaGroup>();
         public MeshFilter MeshFilter;
         public Globe.SnowMovement SnowMovement;
         public UnityEngine.Material RiverMaterial;
@@ -51,6 +52,8 @@ namespace Project.Map
             Debug.Log(name + " optimizing areas meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
             Area.OptimizeMeshes(WaterAreas, "Water Areas");
             Area.OptimizeMeshes(MountainAreas, "Mountain Areas");
+            Debug.Log(name + " grouping areas, time: " + UnityEngine.Time.realtimeSinceStartup);
+            GroupAreas();
             Debug.Log(name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
             var cities=CitiesGenerator.Generate(PlainsAreas);
             Debug.Log(name + " generating roads, time: " + UnityEngine.Time.realtimeSinceStartup);
@@ -230,6 +233,48 @@ namespace Project.Map
             }
         }
 
+        private void GroupAreas()
+        {
+            var possibleAreas = PossibleAreas();
+            while(possibleAreas.Count>0)
+            {
+                var group = new AreaGroup();
+                AreaGroups.Add(group);
+                var area = Utility.ListUtilities.GetRandomObject(possibleAreas);
+                area.AddToAreaGroup(group);
+                possibleAreas.Remove(area);
+                AddNeighboursToAreaGroup(group, area, possibleAreas);
+            }
+            Debug.Log("Area groups count: "+ AreaGroups.Count);
+        }
+
+        private void AddNeighboursToAreaGroup(AreaGroup group,Area area,List<Area> possibleAreas)
+        {
+            var neighbours = area.GetNeighboursOfType(Area.EType.Plains);
+            neighbours.AddRange(area.GetNeighboursOfType(Area.EType.Hills));
+            for (int i = 0; i < neighbours.Count; i++)
+            {
+                if (group.Contains(neighbours[i]))
+                {
+                    neighbours.RemoveAt(i);
+                    i--;
+                }
+            }
+            if (neighbours.Count == 0)
+            {
+                return;
+            }
+            foreach (var neighbour in neighbours)
+            {
+                neighbour.AddToAreaGroup(group);
+                possibleAreas.Remove(neighbour);
+            }
+            foreach (var neighbour in neighbours)
+            {
+                AddNeighboursToAreaGroup(group, neighbour, possibleAreas);
+            }
+        }
+
         private void GenerateRivers()
         {
             var max = 400 + random.Next(100);
@@ -288,6 +333,10 @@ namespace Project.Map
                     {
                         continue;
                     }
+                    if (area1.AreaGroup != area2.AreaGroup)
+                    {
+                        continue;
+                    }
                     if (Vector3.Distance(area1.Position, area2.Position)>2000)
                     {
                         continue;
@@ -303,7 +352,7 @@ namespace Project.Map
             {
                 try
                 {
-                    var road = new Road(pair.Item1, pair.Item2, PossibleAreas(), transform, RoadMaterial);
+                    var road = new Road(pair.Item1, pair.Item2, new List<Area>(pair.Item1.AreaGroup), transform, RoadMaterial);
                 }
                 catch (IOException e)
                 {

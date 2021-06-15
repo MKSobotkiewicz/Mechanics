@@ -16,64 +16,90 @@ namespace Project.Utility
             Debug.Log("Pathfinder spent time: "+ spentTime);
         }
 
-        public static List<Area> FindPath(Area start, Area goal, List<Area> areas)
+        public static List<Area> FindPath(
+            Area start, 
+            Area goal, 
+            List<Area> areas,
+            int maxCheckDistance=2, 
+            Dictionary<Area, float> distance = null,
+            Dictionary<Area, Area> previous=null, 
+            List<Tuple<float, Area>> unvisited =null)
         {
             float startTime = UnityEngine.Time.realtimeSinceStartup;
             float stopTime;
-
-            Dictionary<Area, float> distance = new Dictionary<Area, float>();
-            Dictionary<Area, Area> previous = new Dictionary<Area, Area>();
-
-            List<Area> Unvisited = new List<Area>();
-
-            List<Area> Path = null;
-
-            distance[start] = 0;
-            previous[start] = null;
-            foreach (Area x in areas)
+            var maxDistance = Vector3.Distance(start.Position, goal.Position) * maxCheckDistance;
+            if (distance == null|| previous == null||unvisited==null)
             {
-                if (x != start)
+                distance = new Dictionary<Area, float>();
+                previous = new Dictionary<Area, Area>();
+                unvisited = new List<Tuple<float, Area>>();
+                distance[start] = 0;
+                previous[start] = null;
+                foreach (Area x in areas)
                 {
-                    distance[x] = Mathf.Infinity;
-                    previous[x] = null;
+                    if (x != start)
+                    {
+                        distance[x] = Mathf.Infinity;
+                        previous[x] = null;
+                    }
+                    var distanceWeigth = Vector3.Distance(x.Position, start.Position) + Vector3.Distance(x.Position, goal.Position);
+                    if (distanceWeigth < maxDistance)
+                    {
+                        unvisited.Add(new Tuple<float, Area>(distanceWeigth, x));
+                    }
                 }
-                Unvisited.Add(x);
+                unvisited.OrderBy(u => u.Item1);
             }
-            while (Unvisited.Count > 0)
+            var Path = new List<Area>();
+
+            while (unvisited.Count > 0)
             {
-                Area u = null;
-                foreach (var possibleU in Unvisited)
+                Tuple<float, Area> u = null;
+                foreach (var possibleU in unvisited)
                 {
-                    if (u == null || distance[possibleU] < distance[u])
+                    if (u == null)
+                    {
+                        u = possibleU;
+                    }
+                    if (distance[possibleU.Item2] < distance[u.Item2])
                     {
                         u = possibleU;
                     }
                 }
-
-                if (u == goal)
+                if (u.Item2 == goal)
                 {
                     break;
                 }
-                Unvisited.Remove(u);
-                foreach (var x in u.GetNeighboursWithDistance())
+                unvisited.Remove(u);
+                foreach (var x in u.Item2.GetNeighboursWithDistance())
                 {
-                    float alt = distance[u] + x.Item2;
+                    var alt = distance[u.Item2] + x.Item2;
                     if (alt < distance[x.Item1])
                     {
                         distance[x.Item1] = alt;
-                        previous[x.Item1] = u;
+                        previous[x.Item1] = u.Item2;
                     }
                 }
             }
             if (previous[goal] == null)
             {
                 //Debug.Log("Cant Reach Goal.");
-                stopTime = UnityEngine.Time.realtimeSinceStartup;
-                spentTime += stopTime - startTime;
-                return null;
+                if (maxCheckDistance >= 100)
+                {
+                    stopTime = UnityEngine.Time.realtimeSinceStartup;
+                    spentTime += stopTime - startTime;
+                    return null;
+                }
+                else
+                {
+                    maxCheckDistance *= 2;
+                    Path = FindPath(start, goal, areas, maxCheckDistance,distance,previous,unvisited);
+                    stopTime = UnityEngine.Time.realtimeSinceStartup;
+                    spentTime += stopTime - startTime;
+                    return Path;
+                }
             }
             //Debug.Log("Reached Goal.");
-            Path = new List<Area>();
             Area current = goal;
             while (current != null)
             {

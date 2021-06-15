@@ -21,6 +21,7 @@ namespace Project.Map
         public List<Resources.ResourceGenerator> ResourceGenerators { get; private set; } = new List<Resources.ResourceGenerator>();
         public bool Road = false;
 
+        public AreaGroup AreaGroup { get; private set; }
         private UnityEngine.Material material;
         private UI.Area areaUI;
         private int[] globeVertices;
@@ -90,6 +91,16 @@ namespace Project.Map
             {
                 areaUI.Destroy();
             }
+        }
+
+        public void AddToAreaGroup(AreaGroup areaGroup)
+        {
+            if (AreaGroup != null)
+            {
+                AreaGroup.Remove(this);
+            }
+            AreaGroup = areaGroup;
+            AreaGroup.Add(this);
         }
 
         public Vector3 GetAreaOrNeighboursLowestPosition()
@@ -173,7 +184,7 @@ namespace Project.Map
                 }
                 if (neighbour.Type == EType.Plains)
                 {
-                    neighboursWithDistance.Add(new Tuple<Area, float>(neighbour,1));
+                    neighboursWithDistance.Add(new Tuple<Area, float>(neighbour, 1));
                     continue;
                 }
                 if (neighbour.Type == EType.Hills)
@@ -201,28 +212,6 @@ namespace Project.Map
                 }
             }
             return neighboursOfType;
-        }
-
-        public static void OptimizeMeshes(List<Area> areas,string name)
-        {
-            var masterMesh = new GameObject(name);
-            var mf = masterMesh.AddComponent<MeshFilter>();
-            var mr = masterMesh.AddComponent<MeshRenderer>();
-            mr.material = areas[0].GetComponentInChildren<MeshRenderer>().material;
-            var combine = new CombineInstance[areas.Count];
-            for (int i = 0; i < areas.Count; i++)
-            {
-                combine[i].mesh = areas[i].GetComponentInChildren<MeshFilter>().mesh;
-                combine[i].transform = areas[i].transform.localToWorldMatrix;
-            }
-            mf.mesh = new Mesh();
-            mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            mf.mesh.CombineMeshes(combine);
-            for (int i = 0; i < areas.Count; i++)
-            {
-                Destroy(areas[i].GetComponentInChildren<MeshFilter>());
-                Destroy(areas[i].GetComponentInChildren<MeshRenderer>());
-            }
         }
 
         private void GetNeighbours(List<Area> areas)
@@ -393,6 +382,28 @@ namespace Project.Map
                     material.SetColor(color, PlainsTilesColor);
                     material.SetFloat(accesibility, 0);
                     return;
+            }
+        }
+
+        public static void OptimizeMeshes(List<Area> areas,string name)
+        {
+            var masterMesh = new GameObject(name);
+            var mf = masterMesh.AddComponent<MeshFilter>();
+            var mr = masterMesh.AddComponent<MeshRenderer>();
+            mr.material = areas[0].GetComponentInChildren<MeshRenderer>().material;
+            var combine = new CombineInstance[areas.Count];
+            for (int i = 0; i < areas.Count; i++)
+            {
+                combine[i].mesh = areas[i].GetComponentInChildren<MeshFilter>().mesh;
+                combine[i].transform = areas[i].transform.localToWorldMatrix;
+            }
+            mf.mesh = new Mesh();
+            mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mf.mesh.CombineMeshes(combine);
+            for (int i = 0; i < areas.Count; i++)
+            {
+                Destroy(areas[i].GetComponentInChildren<MeshFilter>());
+                Destroy(areas[i].GetComponentInChildren<MeshRenderer>());
             }
         }
 
