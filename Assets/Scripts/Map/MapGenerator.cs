@@ -182,7 +182,7 @@ namespace Project.Map
             {
                 Areas[i].SetType(colors[ids[i* idsPerArea]],this);
                 var verticesIds=new int[idsPerArea];
-                System.Array.Copy(ids, i * idsPerArea, verticesIds,0, idsPerArea);
+                Array.Copy(ids, i * idsPerArea, verticesIds,0, idsPerArea);
                 Areas[i].SetGlobeVertices(verticesIds);
 
             }

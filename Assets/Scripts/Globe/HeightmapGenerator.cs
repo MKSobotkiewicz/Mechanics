@@ -18,7 +18,7 @@ namespace Project.Globe
 
         private static readonly System.Random random = new System.Random();
 
-        public void Start()
+        public void Awake()
         {
             meshFilter = GetComponent<MeshFilter>();
             if (meshFilter == null)
