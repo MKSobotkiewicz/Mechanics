@@ -93,6 +93,35 @@ float StepSample(float3 value, float steps,float scale)
 	return output;
 }
 
+float3 CheckForNaNs(float3 value)
+{
+	if (value.x < -100) 
+	{
+		value.x = -1;
+	}
+	else if (value.x>100) 
+	{
+		value.x = 1;
+	}
+	if (value.y < -100)
+	{
+		value.y = -1;
+	}
+	else if (value.y > 100)
+	{
+		value.y = 1;
+	}
+	if (value.z < -100)
+	{
+		value.z = -1;
+	}
+	else if (value.z > 100)
+	{
+		value.z = 1;
+	}
+	return value;
+}
+
 [numthreads(64, 1, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
@@ -137,8 +166,8 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 		color = float4(0, 0, 1,1);
 	}
 	float desertNoise = StepSample(vertice + float3(11000 * Seed, 11000 * Seed, 11000 * Seed), 5, 0.2) *0.1;
-	color.a = clamp(totalNoise/20 * clamp(-50*(vertice.z + 0.25+ desertNoise)*(vertice.z - 0.15+ desertNoise)*(vertice.z + 0.15- desertNoise)*(vertice.z - 0.25- desertNoise),0,1), 0, 1);
-	color.a +=0.1*clamp(totalNoise / 20 * clamp(-50 * (vertice.z + 0.35 + desertNoise)*(vertice.z - 0.25 + desertNoise)*(vertice.z + 0.25 - desertNoise)*(vertice.z - 0.35 - desertNoise), 0, 1), 0, 1);
+	color.a = saturate(totalNoise/20 * saturate(-50*(vertice.z + 0.25+ desertNoise)*(vertice.z - 0.15+ desertNoise)*(vertice.z + 0.15- desertNoise)*(vertice.z - 0.25- desertNoise)));
+	color.a +=0.1*saturate(totalNoise / 20 * saturate(-50 * (vertice.z + 0.35 + desertNoise)*(vertice.z - 0.25 + desertNoise)*(vertice.z + 0.25 - desertNoise)*(vertice.z - 0.35 - desertNoise)));
 	/*if ((vertice.x>0.2&&vertice.x < 0.35)|| (vertice.x < -0.2&&vertice.x > -0.35))
 	{
 		color.a += 0.5;
@@ -154,6 +183,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 	spherical.y -= warpNoise3;
 	spherical.z -= warpNoise4;
 	vertice = toCartesian(spherical.x, spherical.y, spherical.z);
+	vertice = CheckForNaNs(vertice);
 	Vertices[id.x] = vertice;
 	Colors[id.x] = color;
 }

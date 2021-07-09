@@ -42,11 +42,21 @@ namespace Project.Globe
             colorsBuffer.GetData(colors);
             meshFilter.mesh.SetVertices(vertices);
             meshFilter.mesh.SetColors(colors);
+            meshFilter.mesh.Optimize();
             meshFilter.mesh.RecalculateBounds();
             meshFilter.mesh.RecalculateNormals();
             meshFilter.mesh.RecalculateTangents();
             verticesBuffer.Release();
             colorsBuffer.Release();
+            var collider = GetComponent<MeshCollider>();
+            if (collider != null)
+            {
+                collider.sharedMesh = meshFilter.mesh;
+            }
+            else
+            {
+                Debug.LogWarning(name + " missing MeshCollider.");
+            }
         }
 
         public void Update()

@@ -6,7 +6,7 @@ namespace Project.Resources
 {
     public class ResourceDepot : MonoBehaviour, Time.IDaily
     {
-        public List<ResourceValue> resources = new Resources();
+        public List<ResourceValue> resources = new ResourceValueList();
 
         private static uint count = 0;
 
@@ -91,33 +91,33 @@ namespace Project.Resources
             return 1;
         }
 
-        public void Add(Resources _resources)
+        public void Add(ResourceValueList resourceValueList)
         {
-            foreach (var resource in _resources)
+            foreach (var resource in resourceValueList)
             {
                 Add(resource.Copy());
             }
         }
 
-        public bool Substract(Resources _resources)
+        public bool Substract(ResourceValueList resourceValueList)
         {
-            foreach (var resource in _resources)
+            foreach (var resource in resourceValueList)
             {
                 if (!CanSubstract(resource))
                 {
                     return false;
                 }
             }
-            foreach (var resource in _resources)
+            foreach (var resource in resourceValueList)
             {
                 Substract(resource);
             }
             return true;
         }
 
-        public bool CanSubstract(Resources _resources)
+        public bool CanSubstract(ResourceValueList resourceValueList)
         {
-            foreach (var resource in _resources)
+            foreach (var resource in resourceValueList)
             {
                 if (!CanSubstract(resource))
                 {
@@ -127,10 +127,10 @@ namespace Project.Resources
             return true;
         }
 
-        public float CanSubstractPercentage(Resources _resources)
+        public float CanSubstractPercentage(ResourceValueList resourceValueList)
         {
             float percentage = 1;
-            foreach (var resource in _resources)
+            foreach (var resource in resourceValueList)
             {
                 var newPercentage = CanSubstractPercentage(resource);
                 if (newPercentage< percentage)
@@ -141,10 +141,10 @@ namespace Project.Resources
             return percentage;
         }
 
-        public float SubstractAsMuchAsPossible(Resources _resources)
+        public float SubstractAsMuchAsPossible(ResourceValueList resourceValueList)
         {
             float percentage = 1;
-            foreach (var resource in _resources)
+            foreach (var resource in resourceValueList)
             {
                 var newPercentage = CanSubstractPercentage(resource);
                 if (newPercentage < percentage)
@@ -152,8 +152,8 @@ namespace Project.Resources
                     percentage = newPercentage;
                 }
             }
-            Resources maxResurces = new Resources();
-            foreach(var resource in _resources)
+            ResourceValueList maxResurces = new ResourceValueList();
+            foreach(var resource in resourceValueList)
             {
                 maxResurces.Add(percentage * resource);
             }

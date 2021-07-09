@@ -41,7 +41,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 		distance[i] = 9999;
 		verticeId[i] = 0;
 	}
-	for (int i = 0; i < Vertices.Length; i++)
+	for (i = 0; i < Vertices.Length; i++)
 	{
 		if (id.x == i)
 		{
@@ -58,7 +58,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 			}
 		}
 	}
-	for (int i = 0; i < IDS_PER_AREA;i++) 
+	for (i = 0; i < IDS_PER_AREA;i++) 
 	{
 		VerticeIds[id.x * IDS_PER_AREA+i] = verticeId[i];
 	}

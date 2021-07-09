@@ -8,8 +8,8 @@ namespace Project.Resources
     {
         public uint Size = 1;
         public float Capacity = 1;
+        public ResourceGeneratorType resourceGeneratorType { get; private set; }
 
-        private ResourceGeneratorType resourceGeneratorType;
         private ResourceDepot resourceDepot;
         private bool initialized = false;
         private static uint count=0;
@@ -57,8 +57,8 @@ namespace Project.Resources
                 return true;
             }
             return false;*/
-            var capacity=resourceDepot.SubstractAsMuchAsPossible(Size*(resourceGeneratorType.CostPerDay as Resources));
-            resourceDepot.Add(capacity* Size*(resourceGeneratorType.ProductionPerDay as Resources));
+            var capacity=resourceDepot.SubstractAsMuchAsPossible(Size*(resourceGeneratorType.CostPerDay as ResourceValueList));
+            resourceDepot.Add(capacity* Size*(resourceGeneratorType.ProductionPerDay as ResourceValueList));
             Capacity = capacity;
             return true;
         }

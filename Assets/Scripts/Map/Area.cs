@@ -20,14 +20,15 @@ namespace Project.Map
         public Resources.ResourceDepot ResourceDepot { get; private set; }
         public List<Resources.ResourceGenerator> ResourceGenerators { get; private set; } = new List<Resources.ResourceGenerator>();
         public bool Road = false;
-
         public AreaGroup AreaGroup { get; private set; }
+
         private UnityEngine.Material material;
         private UI.Area areaUI;
         private int[] globeVertices;
         private Mesh globeMesh;
         private Mesh landformMesh;
         private Time.Time time;
+        private UI.ResourceIconGroup ResourceIconGroup;
 
         private static Area currentlySelectedArea;
         private static readonly List<Area> allAreas = new List<Area>();
@@ -41,6 +42,7 @@ namespace Project.Map
         public void Awake()
         {
             material = GetComponentInChildren<MeshRenderer>().material;
+            ResourceIconGroup = GetComponentInChildren<UI.ResourceIconGroup>();
         }
 
         public void SetTime(Time.Time _time)
@@ -280,6 +282,10 @@ namespace Project.Map
             rg.transform.parent = transform;
             rg.transform.localPosition = new Vector3();
             ResourceGenerators.Add(rg);
+            foreach (var res in rg.resourceGeneratorType.ProductionPerDay)
+            {
+                ResourceIconGroup.AddResourceIcon(res.Resource);
+            }
         }
 
         private void AddAreaToMapGeneratorAreaLists(MapGenerator mapGenerator)

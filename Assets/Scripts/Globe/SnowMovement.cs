@@ -8,6 +8,7 @@ namespace Project.Globe
     {
         public Time.Time Time;
         public List<UnityEngine.Material> materials=new List<UnityEngine.Material>();
+        public float Value { get; private set; }
 
         public void Start()
         {
@@ -32,10 +33,11 @@ namespace Project.Globe
         public void DailyUpdate()
         {
             float angle =Mathf.Sin((((float)Time.Day - 80) / (float)Time.GetThisYearsDayCount()) * 2 * Mathf.PI) * 10;
-            Debug.Log(angle);
+            //Debug.Log(angle);
+            Value = -angle / 15;
             foreach (var material in materials)
             {
-                material.SetFloat("Vector1_c1314484067849e9a0897c8e6b791b8b", -angle / 30);
+                material.SetFloat("Vector1_c1314484067849e9a0897c8e6b791b8b", Value);
             }
         }
     }

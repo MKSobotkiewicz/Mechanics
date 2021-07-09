@@ -10,8 +10,11 @@ namespace Project.Map
     {
         public GameObject AreaPrefab;
         public Resources.ResourceGeneratorType RiverGeneratorTypePrefab;
+        public Forest ForestPrefab;
         public Time.Time Time;
         public CitiesGenerator CitiesGenerator;
+        public AlienCitiesGenerator AlienCitiesGenerator;
+        public ResourcesSpreader ResourcesSpreader;
         public List<Area> Areas { get; private set; } = new List<Area>();
         public List<Area> WaterAreas { get; private set; } = new List<Area>();
         public List<Area> MountainAreas { get; private set; } = new List<Area>();
@@ -54,10 +57,16 @@ namespace Project.Map
             Area.OptimizeMeshes(MountainAreas, "Mountain Areas");
             Debug.Log(name + " grouping areas, time: " + UnityEngine.Time.realtimeSinceStartup);
             GroupAreas();
-            Debug.Log(name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
+            Debug.Log(name + " adding forests, time: " + UnityEngine.Time.realtimeSinceStartup);
+            AddForests();
+            /*Debug.Log(name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
             var cities=CitiesGenerator.Generate(PlainsAreas);
             Debug.Log(name + " generating roads, time: " + UnityEngine.Time.realtimeSinceStartup);
-            GenerateRoads(cities);
+            GenerateRoads(cities);*/
+            Debug.Log(name + " spreading resources, time: " + UnityEngine.Time.realtimeSinceStartup);
+            ResourcesSpreader.SpreadResources (PossibleAreas());
+            Debug.Log(name + " generating alien cities, time: " + UnityEngine.Time.realtimeSinceStartup);
+            var alienCities=AlienCitiesGenerator.Generate(PossibleAreas(),100);
             Debug.Log(name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
 
             GetComponent<MeshRenderer>().enabled = false;
@@ -73,7 +82,7 @@ namespace Project.Map
             {
                 var go = Instantiate(AreaPrefab);
                 go.name = "Area " + i.ToString();
-                var area = go.GetComponent<Area>();
+                var area = go.GetComponentInChildren<Area>();
                 area.SetTime(Time);
                 area.transform.parent = transform;
                 area.transform.position = vertice * transform.localScale.x;
@@ -201,7 +210,7 @@ namespace Project.Map
                         {
                             var j = random.Next(Mountains.Count);
                             var mountain = Instantiate(Mountains[j]);
-                            mountain.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude/ Areas[i].Position.magnitude)) * 0.999f;
+                            mountain.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude / Areas[i].Position.magnitude)) * 0.998f;
                             mountain.transform.LookAt(new Vector3(0, 0, 0));
                             var mr = mountain.GetComponentInChildren<MeshRenderer>();
                             mr.transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
@@ -211,13 +220,14 @@ namespace Project.Map
                             SnowMovement.AddMaterial(mr.material);
                             Areas[i].SetLandformMesh(mountain.GetComponentInChildren<MeshFilter>().mesh);
                             Areas[i].SetLandformVerticesColor(colors[ids[i * idsPerArea]]);
+                            Areas[i].Position *= 1.001f;
                             break;
                         }
                     case Area.EType.Hills:
                         {
                             var j = random.Next(Mountains.Count);
                             var hill = Instantiate(Hills[j]);
-                            hill.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude / Areas[i].Position.magnitude)) * 0.999f;
+                            hill.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude / Areas[i].Position.magnitude)) * 0.998f;
                             hill.transform.LookAt(new Vector3(0, 0, 0));
                             var mr = hill.GetComponentInChildren<MeshRenderer>();
                             mr.transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
@@ -227,8 +237,32 @@ namespace Project.Map
                             SnowMovement.AddMaterial(mr.material);
                             Areas[i].SetLandformMesh(hill.GetComponentInChildren<MeshFilter>().mesh);
                             Areas[i].SetLandformVerticesColor(colors[ids[i * idsPerArea]]);
+                            Areas[i].Position *= 1.001f;
                             break;
                         }
+                }
+            }
+        }
+
+        private void AddForests()
+        {
+            UnityEngine.Material mat;
+            var forests = new GameObject("Forests");
+            var psr = ForestPrefab.GetComponentInChildren<ParticleSystemRenderer>();
+            if (psr != null)
+            {
+                mat = psr.sharedMaterial;
+            }
+            else
+            {
+                mat = ForestPrefab.GetComponentInChildren<MeshRenderer>().sharedMaterial;
+            }
+            mat.SetColor("Color_32ec741d9f04478a8f487932571920e6", PlanetConditions.PlantColor);
+            foreach (var area in PossibleAreas())
+            {
+                if (area.Humidity > 0.8)
+                {
+                    var forest = Forest.Create(ForestPrefab,area, forests.transform, SnowMovement,Time);
                 }
             }
         }
