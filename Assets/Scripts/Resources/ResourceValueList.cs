@@ -42,6 +42,27 @@ namespace Project.Resources
             return null;
         }
 
+        public int At(Resource resource)
+        {
+            for (int i=0;i< Count;i++)
+            {
+                if (this[i].Resource == resource)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public void Log()
+        {
+            Debug.Log("ResourceValueList:");
+            foreach (var rv in this)
+            {
+                rv.Log();
+            }
+        }
+
         public static ResourceValueList operator *(float value, ResourceValueList rvl)
         {
             var newRvl = new ResourceValueList();
@@ -57,10 +78,10 @@ namespace Project.Resources
             var rvl = rvl1.Copy();
             foreach (var rv2 in rvl2)
             {
-                var rv = rvl.Get(rv2.Resource);
-                if (rv != null)
+                var index = rvl.At(rv2.Resource);
+                if (index != -1)
                 {
-                    rv += rv2;
+                    rvl[index] += rv2;
                 }
                 else
                 {
@@ -75,13 +96,13 @@ namespace Project.Resources
             var rvl = rvl1.Copy();
             foreach (var rv2 in rvl2)
             {
-                var rv = rvl.Get(rv2.Resource);
-                if (rv != null)
+                var index = rvl.At(rv2.Resource);
+                if (index != -1)
                 {
-                    rv -= rv2;
-                    if (rv == null)
+                    rvl[index] -= rv2;
+                    if (rvl[index] == null)
                     {
-                        rvl.Remove(rv);
+                        rvl.RemoveAt(index);
                     }
                 }
                 else

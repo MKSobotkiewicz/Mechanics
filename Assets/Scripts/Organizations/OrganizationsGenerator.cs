@@ -19,8 +19,10 @@ namespace Project.Organizations
         public Organization Create()
         {
             var TotalNetCosts = ResourceGenerator.TotalCostPerDay - ResourceGenerator.TotalProductionPerDay;
-            Debug.Log("ResourceGenerator.TotalCostPerDay "+ ResourceGenerator.TotalCostPerDay);
-            Debug.Log("ResourceGenerator.TotalProductionPerDay " + ResourceGenerator.TotalProductionPerDay);
+            Debug.Log("ResourceGenerator.TotalCostPerDay:");
+            ResourceGenerator.TotalCostPerDay.Log();
+            Debug.Log("ResourceGenerator.TotalProductionPerDay:");
+            ResourceGenerator.TotalProductionPerDay.Log();
             if (TotalNetCosts.Count > 0)
             {
                 Debug.Log("");

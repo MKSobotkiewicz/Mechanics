@@ -24,6 +24,11 @@ namespace Project.Resources
             return new ResourceValue(Resource, Value);
         }
 
+        public void Log()
+        {
+            Debug.Log("    "+Resource.name+" "+Value);
+        }
+
         public static ResourceValue operator +(ResourceValue rv1, ResourceValue rv2)
         {
             if (rv1.Resource!=rv2.Resource)
