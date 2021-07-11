@@ -15,13 +15,8 @@ namespace Project.Map
         public CitiesGenerator CitiesGenerator;
         public AlienCitiesGenerator AlienCitiesGenerator;
         public ResourcesSpreader ResourcesSpreader;
-        public List<Area> Areas { get; private set; } = new List<Area>();
-        public List<Area> WaterAreas { get; private set; } = new List<Area>();
-        public List<Area> MountainAreas { get; private set; } = new List<Area>();
-        public List<Area> HillsAreas { get; private set; } = new List<Area>();
-        public List<Area> PlainsAreas { get; private set; } = new List<Area>();
         public List<River> Rivers { get; private set; } = new List<River>();
-        public List<AreaGroup> AreaGroups { get; private set; } = new List<AreaGroup>();
+        public MapData MapData { get; private set; } = new MapData();
         public MeshFilter MeshFilter;
         public Globe.SnowMovement SnowMovement;
         public UnityEngine.Material RiverMaterial;
@@ -45,16 +40,17 @@ namespace Project.Map
             SetAreasNeighbours();
             Debug.Log(name + " setting areas types, time: " + UnityEngine.Time.realtimeSinceStartup);
             SetAreasTypes();
-            Debug.Log(name + " generating rivers, time: " + UnityEngine.Time.realtimeSinceStartup);
-            GenerateRivers();
             Debug.Log(name + " initializing areas, time: " + UnityEngine.Time.realtimeSinceStartup);
-            foreach (var area in Areas)
+            var areas = MapData.Areas;
+            foreach (var area in areas)
             {
-                area.Initialize(Areas);
+                area.Initialize(areas);
             }
             Debug.Log(name + " optimizing areas meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
-            Area.OptimizeMeshes(WaterAreas, "Water Areas");
-            Area.OptimizeMeshes(MountainAreas, "Mountain Areas");
+            Area.OptimizeMeshes(MapData.WaterAreas, "Water Areas");
+            Area.OptimizeMeshes(MapData.MountainAreas, "Mountain Areas");
+            Debug.Log(name + " generating rivers, time: " + UnityEngine.Time.realtimeSinceStartup);
+            GenerateRivers();
             Debug.Log(name + " grouping areas, time: " + UnityEngine.Time.realtimeSinceStartup);
             GroupAreas();
             Debug.Log(name + " adding forests, time: " + UnityEngine.Time.realtimeSinceStartup);
@@ -64,9 +60,12 @@ namespace Project.Map
             Debug.Log(name + " generating roads, time: " + UnityEngine.Time.realtimeSinceStartup);
             GenerateRoads(cities);*/
             Debug.Log(name + " spreading resources, time: " + UnityEngine.Time.realtimeSinceStartup);
-            ResourcesSpreader.SpreadResources (PossibleAreas());
+            ResourcesSpreader.SpreadResources (MapData.PossibleAreas());
             Debug.Log(name + " generating alien cities, time: " + UnityEngine.Time.realtimeSinceStartup);
-            var alienCities=AlienCitiesGenerator.Generate(PossibleAreas(),100);
+            var alienCities=AlienCitiesGenerator.Generate(MapData.PossibleAreas(),100);
+            Debug.Log(name + " ________ " + UnityEngine.Time.realtimeSinceStartup);
+            var og = new Organizations.OrganizationsGenerator(MapData);
+            og.Create();
             Debug.Log(name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
 
             GetComponent<MeshRenderer>().enabled = false;
@@ -91,7 +90,7 @@ namespace Project.Map
                 //var material = area.GetComponentInChildren<MeshRenderer>().material;
                 //material.renderQueue = 3000 + ((i + 1) % 100);
 
-                Areas.Add(area);
+                MapData.Areas.Add(area);
                 i++;
             }
         }
@@ -108,21 +107,15 @@ namespace Project.Map
             }
         }
 
-        private List<Area> PossibleAreas()
-        {
-            var possibleAreas = new List<Area>(PlainsAreas);
-            possibleAreas.AddRange(HillsAreas);
-            return possibleAreas;
-        }
-
         private void SetAreasNeighbours()
         {
             Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
-            var positions = new Vector3[Areas.Count];
-            var ids = new float[Areas.Count * 6];
-            for (int i = 0; i < Areas.Count; i++)
+            var positions = new Vector3[MapData.Areas.Count];
+            var ids = new float[MapData.Areas.Count * 6];
+            var areas = MapData.Areas;
+            for (int i = 0; i < areas.Count; i++)
             {
-                positions[i] = Areas[i].transform.position;
+                positions[i] = areas[i].transform.position;
             }
             var areasBuffer = new ComputeBuffer(positions.Length, sizeof(float) * 3);
             var neighbourIdsBuffer = new ComputeBuffer(ids.Length, sizeof(float));
@@ -137,29 +130,30 @@ namespace Project.Map
             neighbourIdsBuffer.Release();
 
             Debug.Log("  setting neighbours, time: " + UnityEngine.Time.realtimeSinceStartup);
-            for (int i = 0; i < Areas.Count; i++)
+            for (int i = 0; i < areas.Count; i++)
             {
                 var neighbours = new List<Area>
                 {
-                    Areas[(int)ids[i * 6]],
-                    Areas[(int)ids[i * 6 + 1]],
-                    Areas[(int)ids[i * 6 + 2]],
-                    Areas[(int)ids[i * 6 + 3]],
-                    Areas[(int)ids[i * 6 + 4]],
-                    Areas[(int)ids[i * 6 + 5]],
+                    areas[(int)ids[i * 6]],
+                    areas[(int)ids[i * 6 + 1]],
+                    areas[(int)ids[i * 6 + 2]],
+                    areas[(int)ids[i * 6 + 3]],
+                    areas[(int)ids[i * 6 + 4]],
+                    areas[(int)ids[i * 6 + 5]],
                 };
-                Areas[i].SetNeighbours(neighbours);
+                areas[i].SetNeighbours(neighbours);
             }
         }
 
         private void SetAreasTypes()
         {
             int idsPerArea = 40;
+            var areas = MapData.Areas;
             Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
-            var positions = new Vector3[Areas.Count];
-            for (int i = 0; i < Areas.Count; i++)
+            var positions = new Vector3[areas.Count];
+            for (int i = 0; i < areas.Count; i++)
             {
-                positions[i] = Areas[i].transform.position;
+                positions[i] = areas[i].transform.position;
             }
             var ids = new int[positions.Length* idsPerArea];
             var vertices = MeshFilter.mesh.vertices;
@@ -187,30 +181,30 @@ namespace Project.Map
             idBuffer.Release();
             Debug.Log("  setting colors, time: " + UnityEngine.Time.realtimeSinceStartup);
             var colors = MeshFilter.mesh.colors;
-            for (int i = 0; i < Areas.Count; i++)
+            for (int i = 0; i < areas.Count; i++)
             {
-                Areas[i].SetType(colors[ids[i* idsPerArea]],this);
+                areas[i].SetType(colors[ids[i* idsPerArea]],this);
                 var verticesIds=new int[idsPerArea];
                 Array.Copy(ids, i * idsPerArea, verticesIds,0, idsPerArea);
-                Areas[i].SetGlobeVertices(verticesIds);
+                areas[i].SetGlobeVertices(verticesIds);
 
             }
             Debug.Log("  instantiating meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
             vertices = MeshFilter.mesh.vertices;
-            for (int i = 0; i < Areas.Count; i++)
+            for (int i = 0; i < areas.Count; i++)
             {
                 var position = localToWorld.MultiplyPoint3x4(vertices[ids[i * idsPerArea]]);
-                Areas[i].Position = position;
+                areas[i].Position = position;
             }
-            for (int i = 0; i < Areas.Count; i++)
+            for (int i = 0; i < areas.Count; i++)
             {
-                switch (Areas[i].Type)
+                switch (areas[i].Type)
                 {
                     case Area.EType.Mountains:
                         {
                             var j = random.Next(Mountains.Count);
                             var mountain = Instantiate(Mountains[j]);
-                            mountain.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude / Areas[i].Position.magnitude)) * 0.998f;
+                            mountain.transform.position = (areas[i].Position * (areas[i].GetAreaOrNeighboursLowestPosition().magnitude / areas[i].Position.magnitude)) * 0.998f;
                             mountain.transform.LookAt(new Vector3(0, 0, 0));
                             var mr = mountain.GetComponentInChildren<MeshRenderer>();
                             mr.transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
@@ -218,16 +212,16 @@ namespace Project.Map
                             mountain.transform.parent = MeshFilter.transform;
                             mountain.transform.localScale /= 3;
                             SnowMovement.AddMaterial(mr.material);
-                            Areas[i].SetLandformMesh(mountain.GetComponentInChildren<MeshFilter>().mesh);
-                            Areas[i].SetLandformVerticesColor(colors[ids[i * idsPerArea]]);
-                            Areas[i].Position *= 1.001f;
+                            areas[i].SetLandformMesh(mountain.GetComponentInChildren<MeshFilter>().mesh);
+                            areas[i].SetLandformVerticesColor(colors[ids[i * idsPerArea]]);
+                            areas[i].Position *= 1.001f;
                             break;
                         }
                     case Area.EType.Hills:
                         {
                             var j = random.Next(Mountains.Count);
                             var hill = Instantiate(Hills[j]);
-                            hill.transform.position = (Areas[i].Position * (Areas[i].GetAreaOrNeighboursLowestPosition().magnitude / Areas[i].Position.magnitude)) * 0.998f;
+                            hill.transform.position = (areas[i].Position * (areas[i].GetAreaOrNeighboursLowestPosition().magnitude / areas[i].Position.magnitude)) * 0.998f;
                             hill.transform.LookAt(new Vector3(0, 0, 0));
                             var mr = hill.GetComponentInChildren<MeshRenderer>();
                             mr.transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
@@ -235,9 +229,9 @@ namespace Project.Map
                             hill.transform.parent = MeshFilter.transform;
                             hill.transform.localScale /= 3;
                             SnowMovement.AddMaterial(mr.material);
-                            Areas[i].SetLandformMesh(hill.GetComponentInChildren<MeshFilter>().mesh);
-                            Areas[i].SetLandformVerticesColor(colors[ids[i * idsPerArea]]);
-                            Areas[i].Position *= 1.001f;
+                            areas[i].SetLandformMesh(hill.GetComponentInChildren<MeshFilter>().mesh);
+                            areas[i].SetLandformVerticesColor(colors[ids[i * idsPerArea]]);
+                            areas[i].Position *= 1.001f;
                             break;
                         }
                 }
@@ -258,7 +252,8 @@ namespace Project.Map
                 mat = ForestPrefab.GetComponentInChildren<MeshRenderer>().sharedMaterial;
             }
             mat.SetColor("Color_32ec741d9f04478a8f487932571920e6", PlanetConditions.PlantColor);
-            foreach (var area in PossibleAreas())
+            var possibleAreas = MapData.PossibleAreas();
+            foreach (var area in possibleAreas)
             {
                 if (area.Humidity > 0.8)
                 {
@@ -269,17 +264,17 @@ namespace Project.Map
 
         private void GroupAreas()
         {
-            var possibleAreas = PossibleAreas();
+            var possibleAreas = MapData.PossibleAreas();
             while(possibleAreas.Count>0)
             {
                 var group = new AreaGroup();
-                AreaGroups.Add(group);
+                MapData.AreaGroups.Add(group);
                 var area = Utility.ListUtilities.GetRandomObject(possibleAreas);
                 area.AddToAreaGroup(group);
                 possibleAreas.Remove(area);
                 AddNeighboursToAreaGroup(group, area, possibleAreas);
             }
-            Debug.Log("Area groups count: "+ AreaGroups.Count);
+            Debug.Log("Area groups count: "+ MapData.AreaGroups.Count);
         }
 
         private void AddNeighboursToAreaGroup(AreaGroup group,Area area,List<Area> possibleAreas)
@@ -312,9 +307,10 @@ namespace Project.Map
         private void GenerateRivers()
         {
             var max = 400 + random.Next(100);
+            var mountainAreas = MapData.MountainAreas;
             for (int i = 0; i < max; i++)
             {
-                var start = MountainAreas[random.Next(MountainAreas.Count - 1)];
+                var start = mountainAreas[random.Next(mountainAreas.Count - 1)];
                 if (start.River == null)
                 {
                     try
@@ -328,7 +324,8 @@ namespace Project.Map
             }
             var vertices = new List<int>();
             var color = new Color(0,1,0,0);
-            foreach (var area in PossibleAreas())
+            var possibleAreas = MapData.PossibleAreas();
+            foreach (var area in possibleAreas)
             {
                 if (area.River != null)
                 {

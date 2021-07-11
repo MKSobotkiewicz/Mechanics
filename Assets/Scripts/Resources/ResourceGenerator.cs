@@ -8,10 +8,14 @@ namespace Project.Resources
     {
         public uint Size = 1;
         public float Capacity = 1;
-        public ResourceGeneratorType resourceGeneratorType { get; private set; }
+        public ResourceGeneratorType ResourceGeneratorType { get; private set; }
 
         private ResourceDepot resourceDepot;
         private bool initialized = false;
+
+        public static List<ResourceGenerator> AllResurceGenerators { get; private set; } = new List<ResourceGenerator>();
+        public static ResourceValueList TotalProductionPerDay { get; private set; } = new ResourceValueList();
+        public static ResourceValueList TotalCostPerDay { get; private set; } = new ResourceValueList();
         private static uint count=0;
 
         public void Start()
@@ -23,9 +27,9 @@ namespace Project.Resources
             return new GameObject(_resourceGeneratorType.name+" " + count++.ToString()).AddComponent<ResourceGenerator>().Initialize(_resourceDepot, _resourceGeneratorType,Time);
         }
 
-        private ResourceGenerator Initialize(ResourceDepot _resourceDepot,ResourceGeneratorType _resourceGeneratorType, Time.Time Time)
+        private ResourceGenerator Initialize(ResourceDepot _resourceDepot,ResourceGeneratorType resourceGeneratorType, Time.Time Time)
         {
-            if (_resourceGeneratorType==null)
+            if (resourceGeneratorType==null)
             {
                 Debug.LogWarning(name + " ResourceGeneratorType is null");
                 return null;
@@ -42,9 +46,12 @@ namespace Project.Resources
             }
             initialized = true;
             resourceDepot = _resourceDepot;
-            resourceGeneratorType = _resourceGeneratorType;
+            ResourceGeneratorType = resourceGeneratorType;
             transform.parent = resourceDepot.transform;
             Time.AddDaily(this);
+            AllResurceGenerators.Add(this);
+            TotalProductionPerDay += ResourceGeneratorType.ProductionPerDay as ResourceValueList;
+            TotalCostPerDay += ResourceGeneratorType.CostPerDay as ResourceValueList;
             return this;
         }
 
@@ -57,8 +64,8 @@ namespace Project.Resources
                 return true;
             }
             return false;*/
-            var capacity=resourceDepot.SubstractAsMuchAsPossible(Size*(resourceGeneratorType.CostPerDay as ResourceValueList));
-            resourceDepot.Add(capacity* Size*(resourceGeneratorType.ProductionPerDay as ResourceValueList));
+            var capacity=resourceDepot.SubstractAsMuchAsPossible(Size*(ResourceGeneratorType.CostPerDay as ResourceValueList));
+            resourceDepot.Add(capacity* Size*(ResourceGeneratorType.ProductionPerDay as ResourceValueList));
             Capacity = capacity;
             return true;
         }
@@ -79,7 +86,7 @@ namespace Project.Resources
 
         public int Priority()
         {
-            return resourceGeneratorType.Priority;
+            return ResourceGeneratorType.Priority;
         }
     }
 }

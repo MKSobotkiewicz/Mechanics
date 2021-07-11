@@ -282,7 +282,7 @@ namespace Project.Map
             rg.transform.parent = transform;
             rg.transform.localPosition = new Vector3();
             ResourceGenerators.Add(rg);
-            foreach (var res in rg.resourceGeneratorType.ProductionPerDay)
+            foreach (var res in rg.ResourceGeneratorType.ProductionPerDay)
             {
                 ResourceIconGroup.AddResourceIcon(res.Resource);
             }
@@ -293,16 +293,16 @@ namespace Project.Map
             switch (Type)
             {
                 case EType.Water:
-                    mapGenerator.WaterAreas.Add(this);
+                    mapGenerator.MapData.WaterAreas.Add(this);
                     break;
                 case EType.Mountains:
-                    mapGenerator.MountainAreas.Add(this);
+                    mapGenerator.MapData.MountainAreas.Add(this);
                     break;
                 case EType.Hills:
-                    mapGenerator.HillsAreas.Add(this);
+                    mapGenerator.MapData.HillsAreas.Add(this);
                     break;
                 case EType.Plains:
-                    mapGenerator.PlainsAreas.Add(this);
+                    mapGenerator.MapData.PlainsAreas.Add(this);
                     break;
             }
         }

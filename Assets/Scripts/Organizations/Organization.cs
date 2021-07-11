@@ -18,12 +18,12 @@ namespace Project.Organizations
         {
         }
 
-        public List<Resources.ResourceValue> GetDailyResourceCosts()
+        public Resources.ResourceValueList GetDailyResourceCosts()
         {
-            var resourceCosts = new List<Resources.ResourceValue>();
+            var resourceCosts = new Resources.ResourceValueList();
             foreach (var resourceGenerator in OwnedResourceGenerators)
             {
-                foreach (var resourceValue in resourceGenerator.resourceGeneratorType.CostPerDay)
+                foreach (var resourceValue in resourceGenerator.ResourceGeneratorType.CostPerDay)
                 {
                     resourceCosts.Add(resourceValue.Copy());
                 }
@@ -31,17 +31,22 @@ namespace Project.Organizations
             return resourceCosts;
         }
 
-        public List<Resources.ResourceValue> GetDailyResourceProduction()
+        public Resources.ResourceValueList GetDailyGrossResourceProduction()
         {
-            var resourceCosts = new List<Resources.ResourceValue>();
+            var resourceCosts = new Resources.ResourceValueList();
             foreach (var resourceGenerator in OwnedResourceGenerators)
             {
-                foreach (var resourceValue in resourceGenerator.resourceGeneratorType.ProductionPerDay)
+                foreach (var resourceValue in resourceGenerator.ResourceGeneratorType.ProductionPerDay)
                 {
                     resourceCosts.Add(resourceValue.Copy());
                 }
             }
             return resourceCosts;
+        }
+
+        public Resources.ResourceValueList GetDailyNetResourceProduction()
+        {
+            return GetDailyGrossResourceProduction() - GetDailyResourceCosts();
         }
     }
 }
