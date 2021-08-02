@@ -63,7 +63,7 @@ namespace Project.Map
             ResourcesSpreader.SpreadResources (MapData.PossibleAreas());
             Debug.Log(name + " generating alien cities, time: " + UnityEngine.Time.realtimeSinceStartup);
             var alienCities=AlienCitiesGenerator.Generate(MapData.PossibleAreas(),100);
-            Debug.Log(name + " ________ " + UnityEngine.Time.realtimeSinceStartup);
+            Debug.Log(name + " generating organizations: " + UnityEngine.Time.realtimeSinceStartup);
             var og = new Organizations.OrganizationsGenerator(MapData);
             og.Create();
             Debug.Log(name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);

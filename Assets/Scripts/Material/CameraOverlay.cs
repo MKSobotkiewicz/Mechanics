@@ -7,6 +7,7 @@ namespace Project.Material
     public class CameraOverlay : MonoBehaviour
     {
         public float DropTime = 1;
+        public float BaseJitter = 1;
 
         private UnityEngine.Material material;
         private float dropTimer;
@@ -34,8 +35,15 @@ namespace Project.Material
                 {
                     dropTimer = 0;
                 }
-                material.SetFloat("_StripesStrength", dropTimer/DropTime);
+                material.SetFloat("_StripesStrength", (dropTimer/DropTime)+ BaseJitter);
             }
+        }
+
+        public void SetJitter(float value,float time)
+        {
+            DropTime = time;
+            value = Mathf.Clamp01(value);
+            dropTimer = value * DropTime;
         }
 
         public void SetJitter(float value)

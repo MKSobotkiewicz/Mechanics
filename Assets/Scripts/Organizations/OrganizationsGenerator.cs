@@ -19,13 +19,24 @@ namespace Project.Organizations
         public Organization Create()
         {
             var TotalNetCosts = ResourceGenerator.TotalCostPerDay - ResourceGenerator.TotalProductionPerDay;
-            Debug.Log("ResourceGenerator.TotalCostPerDay:");
+            Debug.Log(".TotalCostPerDay:");
             ResourceGenerator.TotalCostPerDay.Log();
-            Debug.Log("ResourceGenerator.TotalProductionPerDay:");
+            Debug.Log("TotalProductionPerDay:");
             ResourceGenerator.TotalProductionPerDay.Log();
+            Debug.Log("TotalNetCosts:");
+            TotalNetCosts.Log();
             if (TotalNetCosts.Count > 0)
             {
-                Debug.Log("");
+                Debug.Log("Costs are not supplied.");
+            }
+            else
+            {
+                Debug.Log("Costs are supplied.");
+                Resource mostValuableResource;
+                foreach (var resource in ResourceGenerator.TotalProductionPerDay)
+                {
+
+                }
             }
             foreach (var resourceGenerator in ResourceGenerator.AllResurceGenerators)
             {
