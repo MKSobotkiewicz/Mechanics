@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Project.Map
 {
@@ -26,52 +27,96 @@ namespace Project.Map
         public List<GameObject> Mountains;
         public List<GameObject> Hills;
 
-        private Globe.PlanetConditions PlanetConditions;
+        protected Globe.PlanetConditions PlanetConditions;
+        protected Scene loadingScreen;
+        protected UI.TextConsole textConsole = null;
 
-        private static readonly System.Random random = new System.Random();
+        protected static readonly System.Random random = new System.Random();
+
+        private int index = 0;
 
         public void Start()
         {
-            Debug.Log(name + " creating climate, time: " + UnityEngine.Time.realtimeSinceStartup);
-            PlanetConditions = Globe.PlanetConditions.GenerateRandom();
-            Debug.Log(name + " creating areas, time: " + UnityEngine.Time.realtimeSinceStartup);
-            CreateAreas();
-            Debug.Log(name + " setting areas neighbour, time: " + UnityEngine.Time.realtimeSinceStartup);
-            SetAreasNeighbours();
-            Debug.Log(name + " setting areas types, time: " + UnityEngine.Time.realtimeSinceStartup);
-            SetAreasTypes();
-            Debug.Log(name + " initializing areas, time: " + UnityEngine.Time.realtimeSinceStartup);
-            var areas = MapData.Areas;
-            foreach (var area in areas)
+            SceneManager.LoadScene("LoadingScreen", LoadSceneMode.Additive);
+            loadingScreen = SceneManager.GetSceneByName("LoadingScreen");
+        }
+
+        public void Update()
+        {
+            if (!loadingScreen.isLoaded)
             {
-                area.Initialize(areas);
+                return;
             }
-            Debug.Log(name + " optimizing areas meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
-            Area.OptimizeMeshes(MapData.WaterAreas, "Water Areas");
-            Area.OptimizeMeshes(MapData.MountainAreas, "Mountain Areas");
-            Debug.Log(name + " generating rivers, time: " + UnityEngine.Time.realtimeSinceStartup);
-            GenerateRivers();
-            Debug.Log(name + " grouping areas, time: " + UnityEngine.Time.realtimeSinceStartup);
-            GroupAreas();
-            Debug.Log(name + " adding forests, time: " + UnityEngine.Time.realtimeSinceStartup);
-            AddForests();
+            SceneManager.SetActiveScene(loadingScreen);
+            textConsole = null;
+            var rgos = loadingScreen.GetRootGameObjects();
+            foreach (var rgo in rgos)
+            {
+                var go = rgo.GetComponentInChildren<UI.TextConsole>();
+                if (go != null)
+                {
+                    textConsole = go;
+                    break;
+                }
+            }
+            if (textConsole == null)
+            {
+                Debug.LogError("LoadingScreen missing LoadingText");
+            }
+            index++;
+            switch (index)
+            {
+                case 1:
+                    GenerationSteps.InitialStep(this);
+                    break;
+                case 2:
+                    GenerationSteps.CreateClimateStep(this);
+                    break;
+                case 3:
+                    GenerationSteps.CreateAreasStep(this);
+                    break;
+                case 4:
+                    GenerationSteps.SettingAreasNeighboursStep(this);
+                    break;
+                case 5:
+                    GenerationSteps.SettingAreasTypesStep(this);
+                    break;
+                case 6:
+                    GenerationSteps.InitializingAreasStep(this);
+                    break;
+                case 7:
+                    GenerationSteps.OptimizingAreasMeshesStep(this);
+                    break;
+                case 8:
+                    GenerationSteps.GeneratingRiversStep(this);
+                    break;
+                case 9:
+                    GenerationSteps.GroupingAreasStep(this);
+                    break;
+                case 10:
+                    GenerationSteps.AddingForestsStep(this);
+                    break;
+                case 11:
+                    GenerationSteps.SpreadingResourcesStep(this);
+                    break;
+                case 12:
+                    GenerationSteps.FinalizeStep(this);
+                    break;
+                default:
+                    Debug.LogError(name+" wrong index");
+                    break;
+            }
             /*Debug.Log(name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
             var cities=CitiesGenerator.Generate(PlainsAreas);
             Debug.Log(name + " generating roads, time: " + UnityEngine.Time.realtimeSinceStartup);
             GenerateRoads(cities);*/
-            Debug.Log(name + " spreading resources, time: " + UnityEngine.Time.realtimeSinceStartup);
-            ResourcesSpreader.SpreadResources (MapData.PossibleAreas());
-            Debug.Log(name + " generating alien cities, time: " + UnityEngine.Time.realtimeSinceStartup);
+            /*Debug.Log(name + " generating alien cities, time: " + UnityEngine.Time.realtimeSinceStartup);
             var alienCities=AlienCitiesGenerator.Generate(MapData.PossibleAreas(),100);
             Debug.Log(name + " generating organizations: " + UnityEngine.Time.realtimeSinceStartup);
-            var og = new Organizations.OrganizationsGenerator(MapData);
-            og.Create();
-            Debug.Log(name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
-
-            GetComponent<MeshRenderer>().enabled = false;
+            var og = new Organizations.OrganizationsGenerator(MapData);*/
         }
 
-        private void CreateAreas()
+        protected void CreateAreas()
         {
             var mesh = GetComponent<MeshFilter>().mesh;
 
@@ -95,7 +140,7 @@ namespace Project.Map
             }
         }
 
-        public void SetMeshesColors(Color color)
+        protected void SetMeshesColors(Color color)
         {
             foreach (var mountain in Mountains)
             {
@@ -107,7 +152,7 @@ namespace Project.Map
             }
         }
 
-        private void SetAreasNeighbours()
+        protected void SetAreasNeighbours()
         {
             Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
             var positions = new Vector3[MapData.Areas.Count];
@@ -145,7 +190,7 @@ namespace Project.Map
             }
         }
 
-        private void SetAreasTypes()
+        protected void SetAreasTypes()
         {
             int idsPerArea = 40;
             var areas = MapData.Areas;
@@ -238,7 +283,7 @@ namespace Project.Map
             }
         }
 
-        private void AddForests()
+        protected void AddForests()
         {
             UnityEngine.Material mat;
             var forests = new GameObject("Forests");
@@ -262,7 +307,7 @@ namespace Project.Map
             }
         }
 
-        private void GroupAreas()
+        protected void GroupAreas()
         {
             var possibleAreas = MapData.PossibleAreas();
             while(possibleAreas.Count>0)
@@ -277,7 +322,7 @@ namespace Project.Map
             Debug.Log("Area groups count: "+ MapData.AreaGroups.Count);
         }
 
-        private void AddNeighboursToAreaGroup(AreaGroup group,Area area,List<Area> possibleAreas)
+        protected void AddNeighboursToAreaGroup(AreaGroup group,Area area,List<Area> possibleAreas)
         {
             var neighbours = area.GetNeighboursOfType(Area.EType.Plains);
             neighbours.AddRange(area.GetNeighboursOfType(Area.EType.Hills));
@@ -304,7 +349,7 @@ namespace Project.Map
             }
         }
 
-        private void GenerateRivers()
+        protected void GenerateRivers()
         {
             var max = 400 + random.Next(100);
             var mountainAreas = MapData.MountainAreas;
@@ -348,7 +393,7 @@ namespace Project.Map
             River.OptimizeAllRivers();
         }
 
-        private void GenerateRoads(List<City> cities)
+        protected void GenerateRoads(List<City> cities)
         {
             var pairs = new HashSet<Tuple<Area, Area>>();
             var areas = new List<Area>();
@@ -398,6 +443,97 @@ namespace Project.Map
             }
             Road.OptimizeAllRoads();
             Utility.Pathfinder.LogSpentTime();
+        }
+
+        private static class GenerationSteps
+        {
+            public static void InitialStep(MapGenerator mapGenerator)
+            {
+                mapGenerator.textConsole.PushBack("creating climate...");
+            }
+
+            public static void CreateClimateStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " creating climate, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.PlanetConditions = Globe.PlanetConditions.GenerateRandom();
+                mapGenerator.textConsole.PushBack("creating areas...");
+            }
+
+            public static void CreateAreasStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " creating areas, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.CreateAreas();
+                mapGenerator.textConsole.PushBack("setting areas neighbours...");
+            }
+
+            public static void SettingAreasNeighboursStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " setting areas neighbours, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.SetAreasNeighbours();
+                mapGenerator.textConsole.PushBack("setting areas types...");
+            }
+
+            public static void SettingAreasTypesStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " setting areas types, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.SetAreasTypes();
+                mapGenerator.textConsole.PushBack("initializing areas...");
+            }
+
+            public static void InitializingAreasStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " initializing areas, time: " + UnityEngine.Time.realtimeSinceStartup);
+                var areas = mapGenerator.MapData.Areas;
+                foreach (var area in areas)
+                {
+                    area.Initialize(areas);
+                }
+                mapGenerator.textConsole.PushBack("optimizing areas meshes...");
+            }
+
+            public static void OptimizingAreasMeshesStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " optimizing areas meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
+                Area.OptimizeMeshes(mapGenerator.MapData.WaterAreas, "Water Areas");
+                Area.OptimizeMeshes(mapGenerator.MapData.MountainAreas, "Mountain Areas");
+                mapGenerator.textConsole.PushBack("generating rivers...");
+            }
+
+            public static void GeneratingRiversStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " generating rivers, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.GenerateRivers();
+                mapGenerator.textConsole.PushBack("grouping areas...");
+            }
+
+            public static void GroupingAreasStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " grouping areas, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.GroupAreas();
+                mapGenerator.textConsole.PushBack("adding forests...");
+            }
+
+
+            public static void AddingForestsStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " adding forests, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.AddForests();
+                mapGenerator.textConsole.PushBack("spreading resources...");
+            }
+
+            public static void SpreadingResourcesStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " spreading resources, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.ResourcesSpreader.SpreadResources(mapGenerator.MapData.PossibleAreas());
+                mapGenerator.textConsole.PushBack("map generation done");
+            }
+
+            public static void FinalizeStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.GetComponent<MeshRenderer>().enabled = false;
+                Destroy(mapGenerator);
+            }
         }
     }
 }
