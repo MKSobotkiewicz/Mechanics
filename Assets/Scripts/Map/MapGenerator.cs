@@ -10,6 +10,7 @@ namespace Project.Map
     public class MapGenerator : MonoBehaviour
     {
         public GameObject AreaPrefab;
+        public UnityEngine.UI.RawImage ScreenOverlay;
         public Resources.ResourceGeneratorType RiverGeneratorTypePrefab;
         public Forest ForestPrefab;
         public Time.Time Time;
@@ -39,6 +40,7 @@ namespace Project.Map
         {
             SceneManager.LoadScene("LoadingScreen", LoadSceneMode.Additive);
             loadingScreen = SceneManager.GetSceneByName("LoadingScreen");
+            ScreenOverlay.enabled = false;
         }
 
         public void Update()
@@ -531,7 +533,20 @@ namespace Project.Map
             public static void FinalizeStep(MapGenerator mapGenerator)
             {
                 Debug.Log(mapGenerator.name + " done, time: " + UnityEngine.Time.realtimeSinceStartup);
-                mapGenerator.GetComponent<MeshRenderer>().enabled = false;
+                mapGenerator.GetComponent<MeshRenderer>().enabled = true;
+                mapGenerator.ScreenOverlay.enabled = true;
+                UnityEngine.Camera camera=null;
+                foreach (var go in mapGenerator.loadingScreen.GetRootGameObjects())
+                {
+                    camera = go.GetComponentInChildren<UnityEngine.Camera>();
+                    if (camera != null)
+                    {
+                        break;
+                    }
+                }
+                mapGenerator.ScreenOverlay.texture = Utility.Camera.RenderToTexture(camera);
+                SceneManager.UnloadSceneAsync(mapGenerator.loadingScreen);
+                LeanTween.alphaCanvas(mapGenerator.ScreenOverlay.GetComponent<CanvasGroup>(),0,3).setDestroyOnComplete(true);
                 Destroy(mapGenerator);
             }
         }
