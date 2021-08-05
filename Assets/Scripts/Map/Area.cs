@@ -174,7 +174,24 @@ namespace Project.Map
             Neighbours = neighbours;
         }
 
-        public List<Tuple<Area, float>> GetNeighboursWithDistance()
+        public float Weight()
+        {
+            if (Road)
+            {
+                return 0.5f;
+            }
+            if (Type == EType.Plains)
+            {
+                return 1;
+            }
+            if (Type == EType.Hills)
+            {
+                return 2;
+            }
+            return float.MaxValue;
+        }
+
+        /*public List<Tuple<Area, float>> GetNeighboursWithDistance()
         {
             var neighboursWithDistance = new List<Tuple<Area, float>>();
             foreach (var neighbour in Neighbours)
@@ -196,7 +213,7 @@ namespace Project.Map
                 }
             }
             return neighboursWithDistance;
-        }
+        }*/
 
         public float Distance(Area area)
         {

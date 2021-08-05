@@ -16,12 +16,14 @@ namespace Project.Time
         [Range(0, 1000)]
         public uint Speed=0;
 
-        public Dictionary<float, List<IDaily>> Dailies { get; private set; }
+        public Dictionary<uint, List<IDaily>> Dailies { get; private set; }
+        public List<IHourly> Hourlies { get; private set; }
 
         public void Awake()
         {
-            Dailies = new Dictionary<float, List<IDaily>>();
-            for (int i = 0; i < 24; i++)
+            Dailies = new Dictionary<uint, List<IDaily>>();
+            Hourlies = new List<IHourly>();
+            for (uint i = 0; i < 24; i++)
             {
                 Dailies.Add(i,new List<IDaily>());
             }
@@ -34,7 +36,8 @@ namespace Project.Time
             {
                 Minute -= 60;
                 Hour += 1;
-                UpdateDailies(Hour%24);
+                UpdateDailies(Hour % 24);
+                UpdateHourlies();
             }
             while (Hour >= 24)
             {
@@ -53,6 +56,11 @@ namespace Project.Time
             Dailies[daily.Priority()].Add(daily);
         }
 
+        public void AddHourly(IHourly hourly)
+        {
+            Hourlies.Add(hourly);
+        }
+
         public uint GetThisYearsDayCount()
         {
             return (uint)(Year % 4 == 0 ? 366 : 365);
@@ -63,6 +71,14 @@ namespace Project.Time
             for (int i = 0; i < Dailies[hour].Count; i++)
             {
                 Dailies[hour][i].DailyUpdate();
+            }
+        }
+
+        private void UpdateHourlies()
+        {
+            for (int i = 0; i < Hourlies.Count; i++)
+            {
+                Hourlies[i].HourlyUpdate();
             }
         }
     }

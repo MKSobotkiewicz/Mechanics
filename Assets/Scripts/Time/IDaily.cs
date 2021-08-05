@@ -3,6 +3,6 @@
     public interface IDaily
     {
         void DailyUpdate();
-        int Priority();
+        uint Priority();
     }
 }

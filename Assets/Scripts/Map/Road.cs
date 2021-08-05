@@ -17,10 +17,10 @@ namespace Project.Map
 
         private static readonly List<Road> allRoads = new List<Road>();
 
-        public Road(Area start, Area target,List<Area> possibleAreas, Transform parent, UnityEngine.Material material)
+        public Road(Area start, Area target, Transform parent, UnityEngine.Material material)
         {
             //Debug.Log("looking for path");
-            Areas = Utility.Pathfinder.FindPath(start,target, possibleAreas);
+            Areas = Utility.Pathfinder.FindPath(start,target);
             if (Areas == null)
             {
                 //Debug.Log("no path");

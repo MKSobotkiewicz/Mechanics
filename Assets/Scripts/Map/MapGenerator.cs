@@ -430,7 +430,7 @@ namespace Project.Map
             {
                 try
                 {
-                    var road = new Road(pair.Item1, pair.Item2, new List<Area>(pair.Item1.AreaGroup), transform, RoadMaterial);
+                    var road = new Road(pair.Item1, pair.Item2, transform, RoadMaterial);
                 }
                 catch (IOException e)
                 {

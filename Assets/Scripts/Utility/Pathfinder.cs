@@ -18,13 +18,17 @@ namespace Project.Utility
 
         public static List<Area> FindPath(
             Area start, 
-            Area goal, 
-            List<Area> areas,
-            int maxCheckDistance=2, 
+            Area goal,
+            AreaGroup areas = null,
+            int maxCheckDistance = 2, 
             Dictionary<Area, float> distance = null,
-            Dictionary<Area, Area> previous=null, 
-            List<Tuple<float, Area>> unvisited =null)
+            Dictionary<Area, Area> previous = null, 
+            List<Tuple<float, Area>> unvisited = null)
         {
+            if (areas == null)
+            {
+                areas = start.AreaGroup;
+            }
             float startTime = UnityEngine.Time.realtimeSinceStartup;
             float stopTime;
             var maxDistance = Vector3.Distance(start.Position, goal.Position) * maxCheckDistance;
@@ -71,21 +75,21 @@ namespace Project.Utility
                     break;
                 }
                 unvisited.Remove(u);
-                foreach (var x in u.Item2.GetNeighboursWithDistance())
+                foreach (var x in u.Item2.Neighbours)
                 {
-                    var alt = distance[u.Item2] + x.Item2;
-                    if (alt < distance[x.Item1])
+                    var alt = distance[u.Item2] + x.Weight();
+                    if (alt < distance[x])
                     {
-                        distance[x.Item1] = alt;
-                        previous[x.Item1] = u.Item2;
+                        distance[x] = alt;
+                        previous[x] = u.Item2;
                     }
                 }
             }
             if (previous[goal] == null)
             {
-                //Debug.Log("Cant Reach Goal.");
                 if (maxCheckDistance >= 100)
                 {
+                    //Debug.Log("Cant Reach Goal.");
                     stopTime = UnityEngine.Time.realtimeSinceStartup;
                     spentTime += stopTime - startTime;
                     return null;
