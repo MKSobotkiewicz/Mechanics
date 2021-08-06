@@ -84,7 +84,7 @@ namespace Project.Resources
             Produce();
         }
 
-        public int Priority()
+        public uint Priority()
         {
             return ResourceGeneratorType.Priority;
         }

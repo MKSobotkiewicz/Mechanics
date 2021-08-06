@@ -21,7 +21,7 @@ namespace Project.Resources
             }
         }
 
-        public int Priority()
+        public uint Priority()
         {
             return 0;
         }

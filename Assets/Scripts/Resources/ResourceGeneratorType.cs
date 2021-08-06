@@ -8,7 +8,7 @@ namespace Project.Resources
     {
         public List<ResourceValue> CostPerDay = new ResourceValueList();
         public List<ResourceValue> ProductionPerDay = new ResourceValueList();
-        public int Priority = 1;
+        public uint Priority = 1;
 
         public void Start()
         {

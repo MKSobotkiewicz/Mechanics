@@ -14,7 +14,7 @@ namespace Project.Organizations
 
         public virtual void DailyUpdate() { }
 
-        public int Priority()
+        public uint Priority()
         {
             return 17;
         }

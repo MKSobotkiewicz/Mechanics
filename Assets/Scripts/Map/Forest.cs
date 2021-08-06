@@ -32,7 +32,7 @@ namespace Project.Map
             return forest;
         }
 
-        public int Priority()
+        public uint Priority()
         {
             return 21;
         }

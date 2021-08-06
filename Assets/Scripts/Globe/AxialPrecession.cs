@@ -17,7 +17,7 @@ namespace Project.Globe
             Time.AddDaily(this);
         }
 
-        public int Priority()
+        public uint Priority()
         {
             return 22;
         }

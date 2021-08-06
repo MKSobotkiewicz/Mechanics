@@ -25,7 +25,7 @@ namespace Project.Globe
             materials.Add(material);
         }
 
-        public int Priority()
+        public uint Priority()
         {
             return 23;
         }
