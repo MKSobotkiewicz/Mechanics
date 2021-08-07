@@ -12,18 +12,36 @@ namespace Project.UI
     {
         public Text Name;
 
+        private Map.Area area;
+
+        private Units.UnitGenerator unitGenerator;
+
         public void Start()
         {
             var size = transform.localScale;
             transform.localScale = new Vector3(0,0,0);
             LeanTween.scale(gameObject,size, 0.2f).setEaseInOutSine();
+            var rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+            foreach (var rootObject in rootObjects)
+            {
+                unitGenerator = rootObject.GetComponentInChildren<Units.UnitGenerator>();
+                if (unitGenerator != null)
+                {
+                    break;
+                }
+            }
         }
-
-        public void SetName(string name)
+        
+        public void CreateUnit()
         {
-            Name.text = name;
+            unitGenerator.Generate(unitGenerator.Units[0],area);
         }
 
+        public void SetArea(Map.Area _area)
+        {
+            area = _area;
+            Name.text = area.name;
+        }
 
         public void Destroy()
         {

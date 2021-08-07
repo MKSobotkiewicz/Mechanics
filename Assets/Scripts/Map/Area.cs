@@ -33,9 +33,9 @@ namespace Project.Map
         private static Area currentlySelectedArea;
         private static readonly List<Area> allAreas = new List<Area>();
 
-        private static readonly string selected = "Vector1_4b18e5eff33c4158af523be6ab56aacd";
-        private static readonly string accesibility = "Vector1_a4b5e65b775c4fda98dfbe45254e6f0a";
-        private static readonly string color = "Color_3a1ee222bd634d87aa92e46c379001ab";
+        private static readonly string selected = "_Selected";
+        private static readonly string accesibility = "_IsAccesible";
+        private static readonly string color = "_Color";
 
         private static readonly System.Random random = new System.Random();
 
@@ -75,10 +75,11 @@ namespace Project.Map
             {
                 return;
             }
+            Debug.Log("SELECT");
             material.SetFloat(selected, 1f);
             var canvas = UnityEngine.Camera.main.GetComponentInChildren<Canvas>();
             areaUI=Instantiate(AreaUIPrefab,canvas.transform);
-            areaUI.SetName(Humidity.ToString());
+            areaUI.SetArea(this);
             if (currentlySelectedArea != null)
             {
                 currentlySelectedArea.Unselect();
@@ -411,9 +412,14 @@ namespace Project.Map
         public static void OptimizeMeshes(List<Area> areas,string name)
         {
             var masterMesh = new GameObject(name);
+            UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(masterMesh, areas[0].gameObject.scene);
+            masterMesh.transform.position = new Vector3();
+            masterMesh.layer = LayerMask.NameToLayer("Area");
             var mf = masterMesh.AddComponent<MeshFilter>();
             var mr = masterMesh.AddComponent<MeshRenderer>();
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.material = areas[0].GetComponentInChildren<MeshRenderer>().material;
+            mr.material.renderQueue += 100;
             var combine = new CombineInstance[areas.Count];
             for (int i = 0; i < areas.Count; i++)
             {
@@ -423,6 +429,10 @@ namespace Project.Map
             mf.mesh = new Mesh();
             mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             mf.mesh.CombineMeshes(combine);
+            mf.mesh.RecalculateBounds();
+            mf.mesh.RecalculateTangents();
+            mf.mesh.RecalculateNormals();
+            mr.allowOcclusionWhenDynamic = false;
             for (int i = 0; i < areas.Count; i++)
             {
                 Destroy(areas[i].GetComponentInChildren<MeshFilter>());

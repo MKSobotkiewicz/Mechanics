@@ -9,7 +9,7 @@ namespace Project.Units
 {
     public class Unit : MonoBehaviour, IMovable
     {
-        public UnitType UnitType { get; private set; }
+        public float _Speed;
 
         private UI.Unit uiElement;
         private Map.Area location;
@@ -28,7 +28,7 @@ namespace Project.Units
 
         public float Speed()
         {
-            return UnitType.Speed;
+            return _Speed;
         }
 
         public float RemainingTravelToNextArea()

@@ -141,19 +141,7 @@ namespace Project.Map
                 i++;
             }
         }
-
-        protected void SetMeshesColors(Color color)
-        {
-            foreach (var mountain in Mountains)
-            {
-                mountain.GetComponentInChildren<MeshRenderer>().sharedMaterial.SetColor("Color_3a1ee222bd634d87aa92e46c379001ab",color);
-            }
-            foreach (var hill in Hills)
-            {
-                hill.GetComponentInChildren<MeshRenderer>().sharedMaterial.SetColor("Color_3a1ee222bd634d87aa92e46c379001ab", color);
-            }
-        }
-
+        
         protected void SetAreasNeighbours()
         {
             Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
@@ -289,6 +277,7 @@ namespace Project.Map
         {
             UnityEngine.Material mat;
             var forests = new GameObject("Forests");
+            forests.transform.parent = transform;
             var psr = ForestPrefab.GetComponentInChildren<ParticleSystemRenderer>();
             if (psr != null)
             {
