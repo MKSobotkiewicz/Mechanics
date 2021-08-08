@@ -34,6 +34,7 @@ namespace Project.UI
         
         public void CreateUnit()
         {
+            Debug.Log("GOWNO");
             unitGenerator.Generate(unitGenerator.Units[0],area);
         }
 
@@ -50,7 +51,7 @@ namespace Project.UI
 
         private void Remove()
         {
-            GameObject.Destroy(this);
+            Destroy(gameObject);
         }
     }
 }

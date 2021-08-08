@@ -536,6 +536,8 @@ namespace Project.Map
                 mapGenerator.ScreenOverlay.texture = Utility.Camera.RenderToTexture(camera);
                 SceneManager.UnloadSceneAsync(mapGenerator.loadingScreen);
                 LeanTween.alphaCanvas(mapGenerator.ScreenOverlay.GetComponent<CanvasGroup>(),0,3).setDestroyOnComplete(true);
+                Destroy(mapGenerator.GetComponent<MeshFilter>());
+                Destroy(mapGenerator.GetComponent<MeshRenderer>());
                 Destroy(mapGenerator);
             }
         }

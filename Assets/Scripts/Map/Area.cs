@@ -66,6 +66,7 @@ namespace Project.Map
 
         public void Click()
         {
+            Debug.Log("CLICK");
             Select();
         }
 
