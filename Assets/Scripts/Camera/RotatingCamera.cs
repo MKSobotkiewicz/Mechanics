@@ -14,7 +14,8 @@ namespace Project.Camera
         public float tiltAroundZ = 0.0F;
 
         public float ZoomRotation = 1f;
-        public float CameraZoomTarget = 40.0F;
+        public float CameraZoomTargetZ = 40.0F;
+        public float CameraZoomTargetY = 0F;
         public float CameraZoomSpeed = 1000F;
         public float MaxZoom = -8000f;
 
@@ -24,6 +25,7 @@ namespace Project.Camera
         
         private new UnityEngine.Camera camera;
         private float distanceClippingPlaneDiffrence;
+        private float baseZ;
 
         void Start()
         {
@@ -32,8 +34,9 @@ namespace Project.Camera
             {
                 Debug.LogError(name+" missing Camera.");
             }
-            distanceClippingPlaneDiffrence = -camera.farClipPlane-camera.transform.localPosition.z;
-            CameraZoomTarget = camera.transform.localPosition.z;
+            baseZ = camera.transform.localPosition.z;
+            distanceClippingPlaneDiffrence = -camera.farClipPlane- baseZ;
+            CameraZoomTargetZ = camera.transform.localPosition.z;
             /*var distances = new float[32];
             distances[0] = 40000;
             distances[1] = 40000;
@@ -48,12 +51,12 @@ namespace Project.Camera
         void FixedUpdate()
         {
             Debug.Log(Input.GetAxis("Vertical"));
-            float tiltX = tiltAroundX - (Input.GetAxis("Vertical")+ Input.GetAxis("Zoom")* ZoomRotation) * XAngleSpeed * CameraZoomTarget;
+            float tiltX = tiltAroundX - (Input.GetAxis("Vertical")/*+ Input.GetAxis("Zoom")* ZoomRotation*/) * XAngleSpeed * CameraZoomTargetZ;
             if (tiltX < 90 && tiltX > -120)
             {
                 tiltAroundX = tiltX;
             }
-            tiltAroundZ += Input.GetAxis("Horizontal") * ZAngleSpeed * CameraZoomTarget;
+            tiltAroundZ += Input.GetAxis("Horizontal") * ZAngleSpeed * CameraZoomTargetZ;
             Quaternion target = Quaternion.Euler(tiltAroundX, tiltAroundZ, 0);
             transform.rotation = Quaternion.Slerp(transform.rotation, target, UnityEngine.Time.fixedDeltaTime * smooth);
 
@@ -65,10 +68,11 @@ namespace Project.Camera
             }
             else
             {
-                CameraZoomTarget = CameraZoomTarget + Input.GetAxis("Zoom") * CameraZoomSpeed;
-                if (CameraZoomTarget > MaxZoom) CameraZoomTarget = MaxZoom;
+                CameraZoomTargetZ = CameraZoomTargetZ + Input.GetAxis("Zoom") * CameraZoomSpeed;
+                if (CameraZoomTargetZ > MaxZoom) CameraZoomTargetZ = MaxZoom;
+                var CameraZoomTargetY = (CameraZoomTargetZ - baseZ)/10;
                 //camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, CameraZoomTarget, UnityEngine.Time.fixedDeltaTime * smooth);
-                camera.transform.localPosition = Vector3.Lerp(new Vector3(0,0,camera.transform.localPosition.z), new Vector3(0, 0, CameraZoomTarget), UnityEngine.Time.fixedDeltaTime * smooth);
+                camera.transform.localPosition = Vector3.Lerp(new Vector3(0, camera.transform.localPosition.y, camera.transform.localPosition.z), new Vector3(0, CameraZoomTargetY, CameraZoomTargetZ), UnityEngine.Time.fixedDeltaTime * smooth);
                 camera.farClipPlane =- camera.transform.localPosition.z-distanceClippingPlaneDiffrence;
             }
         }
