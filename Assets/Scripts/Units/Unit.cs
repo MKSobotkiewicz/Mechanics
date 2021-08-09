@@ -16,6 +16,12 @@ namespace Project.Units
         private List<Map.Area> path;
         private float remainingTravelToNextArea;
 
+        public void Init(Map.Area _location)
+        {
+            location = _location;
+            UpdatePosition();
+        }
+
         public Map.Area Location()
         {
             return location;
@@ -60,10 +66,14 @@ namespace Project.Units
             }
         }
 
-        private void UpdatePosition()
+        public void UpdatePosition()
         {
-            transform.position = location.transform.position;
-            transform.rotation = location.transform.rotation;
+            var hit = new RaycastHit();
+            if (Physics.Raycast(location.Position*1.1f, -location.Position.normalized, out hit, Mathf.Infinity))
+            {
+                transform.position = hit.point;
+            }
+            transform.LookAt(transform.position*2);
         }
     }
 }

@@ -17,10 +17,10 @@ namespace Project.Units
             {
                 if (unit == unitType)
                 {
-                    var newUnitGO=Instantiate(unit.gameObject,area.transform);
-                    //newUnit.transform.position = area.transform.position;
-                    //newUnit.transform.rotation = area.transform.rotation;
-                    return newUnitGO.GetComponent<Unit>();
+                    var newUnitGO=Instantiate(unit.gameObject);
+                    var newUnit = newUnitGO.GetComponent<Unit>();
+                    newUnit.Init(area);
+                    return newUnit;
                 }
             }
             return null;

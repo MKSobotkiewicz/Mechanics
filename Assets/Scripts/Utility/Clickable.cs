@@ -11,7 +11,12 @@ namespace Project.Utility
     {
         public List<MonoBehaviour> IClicables = new List<MonoBehaviour>();
 
-        public void OnMouseDown()
+        /*public void OnMouseDown()
+        {
+            Click();
+        }*/
+
+        public void Click()
         {
             if (EventSystem.current.IsPointerOverGameObject()) { return; }
             foreach (var clicable in IClicables)
