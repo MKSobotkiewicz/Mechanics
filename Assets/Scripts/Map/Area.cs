@@ -29,13 +29,17 @@ namespace Project.Map
         private Mesh landformMesh;
         private Time.Time time;
         private UI.ResourceIconGroup ResourceIconGroup;
+        private Player.Player player;
+        private Canvas canvas;
 
-        private static Area currentlySelectedArea;
+        private static Area clicked;
+        private static Area unclicked;
+
         private static readonly List<Area> allAreas = new List<Area>();
-
         private static readonly string selected = "_Selected";
         private static readonly string accesibility = "_IsAccesible";
         private static readonly string color = "_Color";
+
 
         private static readonly System.Random random = new System.Random();
 
@@ -53,48 +57,67 @@ namespace Project.Map
             ResourceDepot.transform.localPosition = new Vector3();
         }
 
-        public void Initialize(List<Area> areas)
+        public void Initialize(List<Area> areas, Player.Player _player)
         {
+            player = _player;
             allAreas.Add(this);
             if (Neighbours.Count == 0)
             {
                 Debug.LogWarning(name+" is missing neighbours");
                 GetNeighbours(areas);
             }
+            canvas= UnityEngine.Camera.main.GetComponentInChildren<Canvas>();
+            areaUI = canvas.GetComponentInChildren<UI.Area>();
             SetMesh();
         }
 
         public void Click()
         {
-            Debug.Log("CLICK");
-            Select();
+            clicked = this;
+        }
+
+        public void Unclick()
+        {
+            if (player.CurrentlySelectedArea != null)
+            {
+                if (this != player.CurrentlySelectedArea)
+                {
+                    player.UnselectCurrentlySelectedArea();
+                }
+            }
+            if (player.SelectedUnits.Count==0)
+            {
+                unclicked = this;
+                CheckForClicked();
+            }
+        }
+
+        public void Order()
+        {
+            var units = player.SelectedUnits;
+
+            if (units.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var unit in units)
+            {
+                unit.Move(this);
+            }
         }
 
         public void Select()
         {
-            if (currentlySelectedArea == this)
-            {
-                return;
-            }
-            Debug.Log("SELECT");
             material.SetFloat(selected, 1f);
-            var canvas = UnityEngine.Camera.main.GetComponentInChildren<Canvas>();
-            areaUI=Instantiate(AreaUIPrefab,canvas.transform);
+            areaUI.SetVisible(true);
             areaUI.SetArea(this);
-            if (currentlySelectedArea != null)
-            {
-                currentlySelectedArea.Unselect();
-            }
-            currentlySelectedArea = this;
         }
 
         public void Unselect()
         {
             material.SetFloat(selected, 0f);
-            if (areaUI != null)
-            {
-                areaUI.Destroy();
-            }
+            areaUI.SetVisible(false);
         }
 
         public void AddToAreaGroup(AreaGroup areaGroup)
@@ -408,6 +431,20 @@ namespace Project.Map
                     material.SetFloat(accesibility, 0);
                     return;
             }
+        }
+
+        public static bool CheckForClicked()
+        {
+            if (clicked != null&& unclicked != null&& clicked== unclicked)
+            {
+                clicked.player.SelectArea(clicked);
+                clicked = null;
+                unclicked = null;
+                return true;
+            }
+            clicked = null;
+            unclicked = null;
+            return false;
         }
 
         public static void OptimizeMeshes(List<Area> areas,string name)

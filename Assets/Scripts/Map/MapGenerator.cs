@@ -10,6 +10,7 @@ namespace Project.Map
     public class MapGenerator : MonoBehaviour
     {
         public GameObject AreaPrefab;
+        public Player.Player Player;
         public UnityEngine.UI.RawImage ScreenOverlay;
         public Resources.ResourceGeneratorType RiverGeneratorTypePrefab;
         public Forest ForestPrefab;
@@ -84,7 +85,7 @@ namespace Project.Map
                     GenerationSteps.SettingAreasTypesStep(this);
                     break;
                 case 6:
-                    GenerationSteps.InitializingAreasStep(this);
+                    GenerationSteps.InitializingAreasStep(this,Player);
                     break;
                 case 7:
                     GenerationSteps.OptimizingAreasMeshesStep(this);
@@ -471,13 +472,13 @@ namespace Project.Map
                 mapGenerator.textConsole.PushBack("initializing areas...");
             }
 
-            public static void InitializingAreasStep(MapGenerator mapGenerator)
+            public static void InitializingAreasStep(MapGenerator mapGenerator,Player.Player player)
             {
                 Debug.Log(mapGenerator.name + " initializing areas, time: " + UnityEngine.Time.realtimeSinceStartup);
                 var areas = mapGenerator.MapData.Areas;
                 foreach (var area in areas)
                 {
-                    area.Initialize(areas);
+                    area.Initialize(areas, player);
                 }
                 mapGenerator.textConsole.PushBack("optimizing areas meshes...");
             }

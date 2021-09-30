@@ -234,6 +234,20 @@ namespace Project.Spline
             }
         }
 
-
+        public static Spline CreateSpline(List<Map.Area> areas,Transform parent, UnityEngine.Material material,string name)
+        {
+            int nodeCount = 0;
+            var spline = (new GameObject(name)).AddComponent<Spline>();
+            spline.transform.parent = parent;
+            for (int i = 1; i < areas.Count; i++)
+            {
+                var node = (new GameObject("Node " + nodeCount++)).AddComponent<SplineNode>();
+                node.transform.parent = spline.transform;
+                node.transform.position = areas[i].Position;
+            }
+            spline.Generate(30, 10, 1, true);
+            spline.SetMaterial(material);
+            return spline;
+        }
     }
 }

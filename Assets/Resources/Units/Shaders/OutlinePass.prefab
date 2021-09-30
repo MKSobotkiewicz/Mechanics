@@ -48,13 +48,13 @@ MonoBehaviour:
   fadeRadius: 0
   priority: 0
   customPasses:
-  - rid: 6819270493070688258
-  - rid: 6819270493070688273
+  - rid: 4563121256540930136
+  - rid: 4563121256540930137
   injectionPoint: 2
   references:
     version: 2
     RefIds:
-    - rid: 6819270493070688258
+    - rid: 4563121256540930136
       type: {class: DrawRenderersCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Outline Pass
@@ -69,7 +69,7 @@ MonoBehaviour:
         renderQueueType: 2
         layerMask:
           serializedVersion: 2
-          m_Bits: 65536
+          m_Bits: 131072
         sortingCriteria: 59
         overrideMaterial: {fileID: 2100000, guid: 92f6c3a087c1c8345922fe7975f0773e, type: 2}
         overrideMaterialPassIndex: 0
@@ -78,7 +78,7 @@ MonoBehaviour:
         depthCompareFunction: 2
         depthWrite: 0
         shaderPass: 0
-    - rid: 6819270493070688273
+    - rid: 4563121256540930137
       type: {class: DrawRenderersCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Unit Pass
@@ -93,7 +93,7 @@ MonoBehaviour:
         renderQueueType: 2
         layerMask:
           serializedVersion: 2
-          m_Bits: 65536
+          m_Bits: 131072
         sortingCriteria: 59
         overrideMaterial: {fileID: 0}
         overrideMaterialPassIndex: 0

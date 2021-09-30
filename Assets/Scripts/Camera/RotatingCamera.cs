@@ -50,7 +50,6 @@ namespace Project.Camera
 
         void FixedUpdate()
         {
-            Debug.Log(Input.GetAxis("Vertical"));
             float tiltX = tiltAroundX - (Input.GetAxis("Vertical")/*+ Input.GetAxis("Zoom")* ZoomRotation*/) * XAngleSpeed * CameraZoomTargetZ;
             if (tiltX < 90 && tiltX > -120)
             {

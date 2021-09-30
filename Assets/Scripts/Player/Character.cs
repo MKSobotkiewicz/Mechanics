@@ -13,7 +13,7 @@ namespace Project.Player
         public float JumpForce = 1;
 
         private new Rigidbody rigidbody;
-        private UnityEngine.Camera camera;
+        private new UnityEngine.Camera camera;
         private bool jumpReady = true;
         private float jumpTimer = 0;
         private float jumpTime = 1;
