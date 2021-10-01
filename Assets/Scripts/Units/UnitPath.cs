@@ -17,7 +17,7 @@ namespace Project.Units
         public void Create(List<Map.Area> path)
         {
             Destroy();
-            spline = Spline.Spline.CreateSpline(path, transform, Material, "Unit Path", 5, 10, 1, false, 0);
+            spline = Spline.Spline.CreateSpline(path, transform, Material, "Unit Path", 5, 10, 1, Spline.Spline.EMarker.EndWithArrow, 0);
         }
 
         public void Destroy()

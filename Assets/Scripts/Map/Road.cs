@@ -67,7 +67,7 @@ namespace Project.Map
 
         private void CreateMesh(Transform parent, UnityEngine.Material material)
         {
-            spline = Spline.Spline.CreateSpline(Areas, parent, material, "Road " + roadCount++, 2, 10, 0, false,0);
+            spline = Spline.Spline.CreateSpline(Areas, parent, material, "Road " + roadCount++, 2, 10, 0, Spline.Spline.EMarker.None,0);
             /*int nodeCount = 0;
             spline = (new GameObject("Road " + roadCount++)).AddComponent<Spline.Spline>();
             spline.transform.parent = parent;

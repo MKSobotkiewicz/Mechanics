@@ -122,18 +122,23 @@ namespace Project.Units
             remainingTravelToNextArea -= Speed();
             while (remainingTravelToNextArea <= 0)
             {
+                if (path== null)
+                { 
+                    break;
+                }
                 Debug.Log("MOVE");
                 path.RemoveAt(0);
                 location = path[0];
-                UpdatePosition();
-                if (path.Count != 0)
+                if (path.Count > 1)
                 {
                     remainingTravelToNextArea += path[0].Weight();
                 }
-                else
+                else if (path.Count == 1)
                 {
-                    break;
+                    UnitPath.Destroy();
+                    path = null;
                 }
+                UpdatePosition();
             }
         }
 

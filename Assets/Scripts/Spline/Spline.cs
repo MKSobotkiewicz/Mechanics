@@ -17,7 +17,7 @@ namespace Project.Spline
         public int SoftenSteps;
         public bool Update = false;
 
-        private bool startNarrow;
+        private EMarker splineMarker;
 
         private List<Vector3> mainPoints;
         private List<Vector3> softenedPoints;
@@ -36,12 +36,12 @@ namespace Project.Spline
             Generate();
         }*/
 
-        public void Generate(float width = 0, int divisions = 0,int softenSteps=0, bool _startNarrow=false)
+        public void Generate(float width = 0, int divisions = 0,int softenSteps=0, EMarker marker= EMarker.None)
         {
             Width = width;
             Divisions = divisions;
             SoftenSteps = softenSteps;
-            startNarrow = _startNarrow;
+            splineMarker = marker;
             GetMainPoints();
             SoftenPoints();
             DividePoints();
@@ -93,7 +93,7 @@ namespace Project.Spline
         private void DividePoints()
         {
             var dividedPointsSet = new HashSet<Vector3>();
-            if (!startNarrow)
+            if (splineMarker!=EMarker.StartNarrow)
             {
                 dividedPointsSet.Add(softenedPoints[0]);
             }
@@ -141,7 +141,7 @@ namespace Project.Spline
 
         private void GenerateMesh()
         {
-            if ((meshRenderer =GetComponent<MeshRenderer>())==null)
+            if ((meshRenderer = GetComponent<MeshRenderer>()) == null)
             {
                 meshRenderer = gameObject.AddComponent<MeshRenderer>();
             }
@@ -150,6 +150,8 @@ namespace Project.Spline
                 meshFilter = gameObject.AddComponent<MeshFilter>();
             }
 
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
             var vertices = new List<Vector3>();
             var uvs = new List<Vector2>();
             var triangles = new List<int>();
@@ -157,14 +159,25 @@ namespace Project.Spline
             var leftPoints = MovePoints(dividedPoints, -Width);
             var rightPoints = MovePoints(dividedPoints, Width);
 
-            if (startNarrow)
-            {
+            switch (splineMarker) {
+                case EMarker.StartNarrow:
                 for (int i = 0; i < Divisions; i++)
                 {
                     var pos = (float)i / (float)Divisions;
                     leftPoints[i] = Vector3.Slerp(dividedPoints[i], leftPoints[i], pos);
                     rightPoints[i] = Vector3.Slerp(dividedPoints[i], rightPoints[i], pos);
                 }
+                    break;
+                case EMarker.EndWithArrow:
+                    leftPoints[leftPoints.Count - 1] = dividedPoints[leftPoints.Count - 1];
+                    rightPoints[rightPoints.Count - 1] = dividedPoints[rightPoints.Count - 1];
+                    var normal = GetNormal(leftPoints[leftPoints.Count - 2], leftPoints[leftPoints.Count - 1]);
+                    leftPoints[leftPoints.Count - 2]=leftPoints[leftPoints.Count - 3]+ Vector3.Cross(normal, leftPoints[leftPoints.Count - 3].normalized).normalized * (-Width*2);
+                    normal = GetNormal(rightPoints[rightPoints.Count - 2], rightPoints[rightPoints.Count - 1]);
+                    rightPoints[rightPoints.Count - 2] = rightPoints[rightPoints.Count - 3] + Vector3.Cross(normal, rightPoints[rightPoints.Count - 3].normalized).normalized * (Width * 2);
+                    break;
+                default:
+                    break;
             }
 
             vertices.Add(leftPoints[0]);
@@ -234,7 +247,7 @@ namespace Project.Spline
             }
         }
 
-        public static Spline CreateSpline(List<Map.Area> areas,Transform parent, UnityEngine.Material material,string name,float width = 30, int divisions = 10, int softenSteps = 1, bool _startNarrow = false,int startIndex=0)
+        public static Spline CreateSpline(List<Map.Area> areas,Transform parent, UnityEngine.Material material,string name,float width = 30, int divisions = 10, int softenSteps = 1, EMarker marker=EMarker.None,int startIndex=0)
         {
             int nodeCount = 0;
             var spline = (new GameObject(name)).AddComponent<Spline>();
@@ -245,9 +258,16 @@ namespace Project.Spline
                 node.transform.parent = spline.transform;
                 node.transform.position = areas[i].Position;
             }
-            spline.Generate(width, divisions, softenSteps, _startNarrow);
+            spline.Generate(width, divisions, softenSteps, marker);
             spline.SetMaterial(material);
             return spline;
+        }
+
+        public enum EMarker
+        {
+            None,
+            StartNarrow,
+            EndWithArrow
         }
     }
 }

@@ -96,7 +96,7 @@ namespace Project.Map
 
         private void CreateMesh(Transform parent, UnityEngine.Material material)
         {
-            spline = Spline.Spline.CreateSpline(Areas,parent, material, "River " + riverCount++,30,10,1,true,1);
+            spline = Spline.Spline.CreateSpline(Areas,parent, material, "River " + riverCount++,30,10,1,Spline.Spline.EMarker.StartNarrow,1);
         }
 
         private Area GetNext(Area currentArea)
