@@ -32,6 +32,7 @@ namespace Project.Map
         protected Globe.PlanetConditions PlanetConditions;
         protected Scene loadingScreen;
         protected UI.TextConsole textConsole = null;
+        protected List<City> cities;
 
         protected static readonly System.Random random = new System.Random();
 
@@ -103,16 +104,18 @@ namespace Project.Map
                     GenerationSteps.SpreadingResourcesStep(this);
                     break;
                 case 12:
+                    GenerationSteps.GeneratingCitiesStep(this);
+                    break;
+                case 13:
+                    GenerationSteps.GeneratingRoadsStep(this);
+                    break;
+                case 14:
                     GenerationSteps.FinalizeStep(this);
                     break;
                 default:
                     Debug.LogError(name+" wrong index");
                     break;
             }
-            /*Debug.Log(name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
-            var cities=CitiesGenerator.Generate(PlainsAreas);
-            Debug.Log(name + " generating roads, time: " + UnityEngine.Time.realtimeSinceStartup);
-            GenerateRoads(cities);*/
             /*Debug.Log(name + " generating alien cities, time: " + UnityEngine.Time.realtimeSinceStartup);
             var alienCities=AlienCitiesGenerator.Generate(MapData.PossibleAreas(),100);
             Debug.Log(name + " generating organizations: " + UnityEngine.Time.realtimeSinceStartup);
@@ -302,7 +305,7 @@ namespace Project.Map
         protected void GroupAreas()
         {
             var possibleAreas = MapData.PossibleAreas();
-            while(possibleAreas.Count>0)
+            while (possibleAreas.Count>0)
             {
                 var group = new AreaGroup();
                 MapData.AreaGroups.Add(group);
@@ -397,7 +400,7 @@ namespace Project.Map
             {
                 foreach (var area2 in areas)
                 {
-                    if (area1== area2)
+                    if (area1 == area2)
                     {
                         continue;
                     }
@@ -411,15 +414,18 @@ namespace Project.Map
                     }
                     if (pairs.Contains(new Tuple<Area, Area>(area2, area1)))
                     {
+                        //Debug.Log("already contained");
                         continue;
                     }
                     pairs.Add(new Tuple<Area, Area>(area1, area2));
                 }
             }
+
+            Debug.Log("pairs "+ pairs.Count);
             foreach (var pair in pairs)
             {
                 try
-                {
+               {
                     var road = new Road(pair.Item1, pair.Item2, transform, RoadMaterial);
                 }
                 catch (IOException e)
@@ -431,6 +437,7 @@ namespace Project.Map
                 }
                 catch
                 {
+                    Debug.LogWarning("KURVA ");
                 }
             }
             Road.OptimizeAllRoads();
@@ -517,7 +524,21 @@ namespace Project.Map
             {
                 Debug.Log(mapGenerator.name + " spreading resources, time: " + UnityEngine.Time.realtimeSinceStartup);
                 mapGenerator.ResourcesSpreader.SpreadResources(mapGenerator.MapData.PossibleAreas());
-                mapGenerator.textConsole.PushBack("map generation done");
+                mapGenerator.textConsole.PushBack("generating cities...");
+            }
+
+            public static void GeneratingCitiesStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.cities = mapGenerator.CitiesGenerator.Generate(mapGenerator.MapData.PlainsAreas);
+                mapGenerator.textConsole.PushBack("generating roads...");
+            }
+
+            public static void GeneratingRoadsStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " generating roads, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.GenerateRoads(mapGenerator.cities);
+                mapGenerator.textConsole.PushBack("finalizing...");
             }
 
             public static void FinalizeStep(MapGenerator mapGenerator)

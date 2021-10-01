@@ -39,7 +39,7 @@ namespace Project.Utility
             }
             if (Input.GetAxis("Order") > 0)
             {
-                //OrderTrue();
+                OrderTrue();
             }
             if (Input.GetAxis("Order") <= 0)
             {
@@ -109,11 +109,10 @@ namespace Project.Utility
 
         private void OrderTrue()
         {
-            Debug.Log("Order");
             var ray = UnityEngine.Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit, 200))
+            if (Physics.Raycast(ray, out hit, 50000))
             {
                 var clickable = hit.transform.gameObject.GetComponent<Clickable>();
                 if (clickable != null)

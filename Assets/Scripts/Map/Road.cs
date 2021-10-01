@@ -23,7 +23,7 @@ namespace Project.Map
             Areas = Utility.Pathfinder.FindPath(start,target);
             if (Areas == null)
             {
-                //Debug.Log("no path");
+                Debug.Log("no path");
                 Fail();
             }
             CreateMesh(parent, material);
@@ -67,8 +67,8 @@ namespace Project.Map
 
         private void CreateMesh(Transform parent, UnityEngine.Material material)
         {
-            //Debug.Log("Areas count: "+ Areas.Count);
-            int nodeCount = 0;
+            spline = Spline.Spline.CreateSpline(Areas, parent, material, "Road " + roadCount++, 2, 10, 0, false,0);
+            /*int nodeCount = 0;
             spline = (new GameObject("Road " + roadCount++)).AddComponent<Spline.Spline>();
             spline.transform.parent = parent;
             for (int i = 0; i < Areas.Count; i++)
@@ -78,7 +78,7 @@ namespace Project.Map
                 node.transform.position = Areas[i].Position;
             }
             spline.Generate(2, 10, 0);
-            spline.SetMaterial(material);
+            spline.SetMaterial(material);*/
         }
     }
 }

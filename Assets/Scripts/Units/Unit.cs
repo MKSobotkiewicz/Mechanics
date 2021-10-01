@@ -11,8 +11,8 @@ namespace Project.Units
     {
         public bool Selected { get; private set; } = false;
         public UnitPath UnitPath;
+        public float speed=1;
 
-        private float speed;
         private UI.Unit uiElement;
         private Player.Player player;
         private Map.Area location;
@@ -21,8 +21,9 @@ namespace Project.Units
 
         public static HashSet<Unit> AllUnits { get; private set; } = new HashSet<Unit>();
 
-        public void Init(Map.Area _location, Player.Player _player)
+        public void Init(Map.Area _location, Player.Player _player,Time.Time time)
         {
+            time.AddHourly(this);
             player = _player;
             location = _location;
             UpdatePosition();
@@ -65,6 +66,7 @@ namespace Project.Units
             Selected = value;
             if (Selected)
             {
+                UnitPath.Show();
                 player.SelectedUnits.Add(this);
                 Debug.Log("Selected");
                 foreach (var tr in transform.GetComponentsInChildren<Transform>())
@@ -74,6 +76,7 @@ namespace Project.Units
             }
             else
             {
+                UnitPath.Hide();
                 player.SelectedUnits.Remove(this);
                 foreach (var tr in transform.GetComponentsInChildren<Transform>())
                 {
@@ -97,24 +100,40 @@ namespace Project.Units
             path = Utility.Pathfinder.FindPath(location,target);
             if (path!=null)
             {
-                uiElement.PathSuccess(path);
+                //uiElement.PathSuccess(path);
                 UnitPath.Destroy();
                 UnitPath.Create(path);
                 return true;
             }
-            uiElement.PathFail();
+            //uiElement.PathFail();
             return false;
         }
 
         public void HourlyUpdate()
         {
+            if (path == null)
+            {
+                return;
+            }
+            if (path.Count == 0)
+            {
+                return;
+            }
             remainingTravelToNextArea -= Speed();
             while (remainingTravelToNextArea <= 0)
             {
-                location = path[0];
+                Debug.Log("MOVE");
                 path.RemoveAt(0);
-                remainingTravelToNextArea += path[0].Weight();
+                location = path[0];
                 UpdatePosition();
+                if (path.Count != 0)
+                {
+                    remainingTravelToNextArea += path[0].Weight();
+                }
+                else
+                {
+                    break;
+                }
             }
         }
 
@@ -124,6 +143,14 @@ namespace Project.Units
             if (Physics.Raycast(location.Position*1.1f, -location.Position.normalized, out hit, Mathf.Infinity))
             {
                 transform.position = hit.point;
+                if (path != null)
+                {
+                    if (path.Count > 0)
+                    {
+                        UnitPath.Destroy();
+                        UnitPath.Create(path);
+                    }
+                }
             }
             transform.LookAt(transform.position*2);
         }

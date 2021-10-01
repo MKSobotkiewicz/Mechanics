@@ -38,13 +38,12 @@ namespace Project.Utility
                 previous = new Dictionary<Area, Area>();
                 unvisited = new List<Tuple<float, Area>>();
                 distance[start] = 0;
-                previous[start] = null;
                 foreach (Area x in areas)
                 {
+                    previous[x]=null;
                     if (x != start)
                     {
                         distance[x] = Mathf.Infinity;
-                        previous[x] = null;
                     }
                     var distanceWeigth = Vector3.Distance(x.Position, start.Position) + Vector3.Distance(x.Position, goal.Position);
                     if (distanceWeigth < maxDistance)
@@ -54,42 +53,46 @@ namespace Project.Utility
                 }
                 unvisited.OrderBy(u => u.Item1);
             }
-            var Path = new List<Area>();
 
             while (unvisited.Count > 0)
             {
-                Tuple<float, Area> u = null;
+                Tuple<float, Area> area = null;
                 foreach (var possibleU in unvisited)
                 {
-                    if (u == null)
+                    if (area == null)
                     {
-                        u = possibleU;
+                        area = possibleU;
                     }
-                    if (distance[possibleU.Item2] < distance[u.Item2])
+                    else if (distance[possibleU.Item2] < distance[area.Item2])
                     {
-                        u = possibleU;
+                        area = possibleU;
                     }
                 }
-                if (u.Item2 == goal)
+                if (area.Item2 == goal)
                 {
                     break;
                 }
-                unvisited.Remove(u);
-                foreach (var x in u.Item2.Neighbours)
+                unvisited.Remove(area);
+                foreach (var x in area.Item2.Neighbours)
                 {
-                    var alt = distance[u.Item2] + x.Weight();
+                    if (x.Type == Area.EType.Mountains || x.Type == Area.EType.Water)
+                    {
+                        continue;
+                    }
+                    var alt = distance[area.Item2] + x.Weight();
                     if (alt < distance[x])
                     {
                         distance[x] = alt;
-                        previous[x] = u.Item2;
+                        previous[x] = area.Item2;
                     }
                 }
             }
+            var Path = new List<Area>();
             if (previous[goal] == null)
             {
-                if (maxCheckDistance >= 100)
+                if (maxCheckDistance >= 10)
                 {
-                    //Debug.Log("Cant Reach Goal.");
+                    Debug.Log("Cant Reach Goal.");
                     stopTime = UnityEngine.Time.realtimeSinceStartup;
                     spentTime += stopTime - startTime;
                     return null;
@@ -103,7 +106,7 @@ namespace Project.Utility
                     return Path;
                 }
             }
-            //Debug.Log("Reached Goal.");
+            Debug.Log("Reached Goal, maxCheckDistance: "+ maxCheckDistance);
             Area current = goal;
             while (current != null)
             {

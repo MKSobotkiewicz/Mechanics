@@ -10,6 +10,7 @@ namespace Project.Units
     public class UnitGenerator : MonoBehaviour
     {
         public Player.Player Player;
+        public Time.Time Time;
         public List<Unit> Units;
 
         public Unit Generate(Unit unitType, Map.Area area)
@@ -20,7 +21,7 @@ namespace Project.Units
                 {
                     var newUnitGO=Instantiate(unit.gameObject);
                     var newUnit = newUnitGO.GetComponent<Unit>();
-                    newUnit.Init(area, Player);
+                    newUnit.Init(area, Player, Time);
                     return newUnit;
                 }
             }

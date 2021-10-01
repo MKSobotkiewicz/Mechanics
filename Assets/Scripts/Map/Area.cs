@@ -94,6 +94,10 @@ namespace Project.Map
 
         public void Order()
         {
+            if (Type == EType.Mountains || Type == EType.Water)
+            {
+                return;
+            }
             var units = player.SelectedUnits;
 
             if (units.Count == 0)

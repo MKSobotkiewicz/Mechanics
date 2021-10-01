@@ -96,18 +96,7 @@ namespace Project.Map
 
         private void CreateMesh(Transform parent, UnityEngine.Material material)
         {
-            spline = Spline.Spline.CreateSpline(Areas,parent, material, "River " + riverCount++);
-            /*int nodeCount = 0;
-            spline = (new GameObject("River "+ riverCount++)).AddComponent<Spline.Spline>();
-            spline.transform.parent = parent;
-            for (int i=1;i<Areas.Count;i++)
-            {
-                var node=(new GameObject("Node "+ nodeCount++)).AddComponent<Spline.SplineNode>();
-                node.transform.parent = spline.transform;
-                node.transform.position = Areas[i].Position;
-            }
-            spline.Generate(30,10,1,true);
-            spline.SetMaterial(material);*/
+            spline = Spline.Spline.CreateSpline(Areas,parent, material, "River " + riverCount++,30,10,1,true,1);
         }
 
         private Area GetNext(Area currentArea)

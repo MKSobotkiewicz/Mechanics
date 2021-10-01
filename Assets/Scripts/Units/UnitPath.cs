@@ -16,7 +16,8 @@ namespace Project.Units
 
         public void Create(List<Map.Area> path)
         {
-            spline = Spline.Spline.CreateSpline(path, transform, Material, "Unit Path");
+            Destroy();
+            spline = Spline.Spline.CreateSpline(path, transform, Material, "Unit Path", 5, 10, 1, false, 0);
         }
 
         public void Destroy()
@@ -25,7 +26,7 @@ namespace Project.Units
             {
                 return;
             }
-            Destroy(spline);
+            Destroy(spline.gameObject);
         }
 
         public void Hide()
