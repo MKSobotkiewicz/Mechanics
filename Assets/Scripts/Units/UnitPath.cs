@@ -9,15 +9,24 @@ namespace Project.Units
 {
     public class UnitPath:MonoBehaviour
     {
-        public UnityEngine.Material Material;
+        public UnityEngine.Material SelectedMaterial;
+        public UnityEngine.Material UnselectedMaterial;
         public float Width;
 
         private Spline.Spline spline;
+        private MeshRenderer splineMeshRenderer;
 
-        public void Create(List<Map.Area> path)
+            public void Create(Unit unit,List<Map.Area> path)
         {
             Destroy();
-            spline = Spline.Spline.CreateSpline(path, transform, Material, "Unit Path", 5, 10, 1, Spline.Spline.EMarker.EndWithArrow, 0);
+            List<Vector3> positions = new List<Vector3>();
+            positions.Add(unit.transform.position);
+            for (int i = 1; i < path.Count; i++)
+            {
+                positions.Add(path[i].Position);
+            }
+            spline = Spline.Spline.CreateSpline(positions, transform, SelectedMaterial, "Unit Path", 5, 10, 1, Spline.Spline.EMarker.EndWithArrow, 0);
+            splineMeshRenderer = spline.GetComponent<MeshRenderer>();
         }
 
         public void Destroy()
@@ -35,7 +44,8 @@ namespace Project.Units
             {
                 return;
             }
-            spline.gameObject.SetActive(false);
+            //spline.gameObject.SetActive(false);
+            splineMeshRenderer.material = UnselectedMaterial;
         }
 
         public void Show()
@@ -44,7 +54,8 @@ namespace Project.Units
             {
                 return;
             }
-            spline.gameObject.SetActive(true);
+            //spline.gameObject.SetActive(true);
+            splineMeshRenderer.material = SelectedMaterial;
         }
     }
 }

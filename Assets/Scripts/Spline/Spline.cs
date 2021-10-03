@@ -247,6 +247,22 @@ namespace Project.Spline
             }
         }
 
+        public static Spline CreateSpline(List<Vector3> positions, Transform parent, UnityEngine.Material material, string name, float width = 30, int divisions = 10, int softenSteps = 1, EMarker marker = EMarker.None, int startIndex = 0)
+        {
+            int nodeCount = 0;
+            var spline = (new GameObject(name)).AddComponent<Spline>();
+            spline.transform.parent = parent;
+            for (int i = startIndex; i < positions.Count; i++)
+            {
+                var node = (new GameObject("Node " + nodeCount++)).AddComponent<SplineNode>();
+                node.transform.parent = spline.transform;
+                node.transform.position = positions[i];
+            }
+            spline.Generate(width, divisions, softenSteps, marker);
+            spline.SetMaterial(material);
+            return spline;
+        }
+
         public static Spline CreateSpline(List<Map.Area> areas,Transform parent, UnityEngine.Material material,string name,float width = 30, int divisions = 10, int softenSteps = 1, EMarker marker=EMarker.None,int startIndex=0)
         {
             int nodeCount = 0;

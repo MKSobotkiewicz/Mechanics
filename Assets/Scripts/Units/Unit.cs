@@ -12,22 +12,33 @@ namespace Project.Units
         public bool Selected { get; private set; } = false;
         public UnitPath UnitPath;
         public float speed=1;
+        public List<GameObject> MovingEffects;
 
         private UI.Unit uiElement;
         private Player.Player player;
         private Map.Area location;
         private List<Map.Area> path;
         private float remainingTravelToNextArea;
+        private Animator animator;
+        private LayerMask layerMask;
 
         public static HashSet<Unit> AllUnits { get; private set; } = new HashSet<Unit>();
 
         public void Init(Map.Area _location, Player.Player _player,Time.Time time)
         {
+            animator = GetComponent<Animator>();
             time.AddHourly(this);
             player = _player;
             location = _location;
             UpdatePosition();
             AllUnits.Add(this);
+            transform.LookAt(location.Neighbours[0].Position, transform.position.normalized);
+            animator.SetBool("Moving", false);
+            layerMask = ~LayerMask.GetMask("Unit","Outlined");
+            foreach (var movingEffect in MovingEffects)
+            {
+                movingEffect.SetActive(false);
+            }
         }
 
         public Map.Area Location()
@@ -101,8 +112,12 @@ namespace Project.Units
             if (path!=null)
             {
                 //uiElement.PathSuccess(path);
-                UnitPath.Destroy();
-                UnitPath.Create(path);
+                UpdatePosition();
+                animator.SetBool("Moving",true);
+                foreach (var movingEffect in MovingEffects)
+                {
+                    movingEffect.SetActive(true);
+                }
                 return true;
             }
             //uiElement.PathFail();
@@ -136,6 +151,11 @@ namespace Project.Units
                 else if (path.Count == 1)
                 {
                     UnitPath.Destroy();
+                    animator.SetBool("Moving", false);
+                    foreach (var movingEffect in MovingEffects)
+                    {
+                        movingEffect.SetActive(false);
+                    }
                     path = null;
                 }
                 UpdatePosition();
@@ -145,19 +165,24 @@ namespace Project.Units
         public void UpdatePosition()
         {
             var hit = new RaycastHit();
-            if (Physics.Raycast(location.Position*1.1f, -location.Position.normalized, out hit, Mathf.Infinity))
+            if (path != null)
             {
-                transform.position = hit.point;
-                if (path != null)
+                if (path.Count > 1)
                 {
-                    if (path.Count > 0)
+                    if (Physics.Raycast(Vector3.Lerp(location.Position,path[1].Position,0.25f) * 1.1f, -location.Position.normalized, out hit, Mathf.Infinity, layerMask))
                     {
+                        transform.position = hit.point;
+                        transform.LookAt(path[1].Position, transform.position.normalized);
                         UnitPath.Destroy();
-                        UnitPath.Create(path);
+                        UnitPath.Create(this,path);
                     }
+                    return;
                 }
             }
-            transform.LookAt(transform.position*2);
+            if (Physics.Raycast(location.Position * 1.1f, -location.Position.normalized, out hit, Mathf.Infinity))
+            {
+                transform.position = hit.point;
+            }
         }
     }
 }
