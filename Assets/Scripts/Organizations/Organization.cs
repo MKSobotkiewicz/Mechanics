@@ -9,6 +9,7 @@ namespace Project.Organizations
     public class Organization : MonoBehaviour
     {
         public List<Resources.ResourceGenerator> OwnedResourceGenerators;
+        public Color Color;
 
         public void Start()
         {

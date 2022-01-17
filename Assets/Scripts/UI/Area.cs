@@ -12,6 +12,7 @@ namespace Project.UI
     {
         public Text Name;
         public Canvas Canvas;
+        public CreateCity CreateCityCanvas;
 
         private Map.Area area;
         private Vector3 size;
@@ -54,9 +55,16 @@ namespace Project.UI
             }
         }
 
-        public void CreateUnit()
+        public void CreateCity()
         {
-            unitGenerator.Generate(unitGenerator.Units[0],area);
+            CreateCityCanvas.SetArea(area);
+            CreateCityCanvas.SetVisible(true);
+            SetVisible(false);
+        }
+
+        public void CreateUnit(int id)
+        {
+            unitGenerator.Generate(unitGenerator.Units[id],area);
         }
 
         public void SetArea(Map.Area _area)

@@ -48,13 +48,15 @@ MonoBehaviour:
   fadeRadius: 0
   priority: 0
   customPasses:
-  - rid: 5405381721094619158
-  - rid: 5405381721094619159
+  - rid: 3242761137150492724
+  - rid: 3242761137150492725
+  - rid: 3242761137150492726
+  - rid: 3242761137150492727
   injectionPoint: 2
   references:
     version: 2
     RefIds:
-    - rid: 5405381721094619158
+    - rid: 3242761137150492724
       type: {class: DrawRenderersCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Outline Pass
@@ -78,7 +80,7 @@ MonoBehaviour:
         depthCompareFunction: 2
         depthWrite: 0
         shaderPass: 0
-    - rid: 5405381721094619159
+    - rid: 3242761137150492725
       type: {class: DrawRenderersCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
       data:
         m_Name: Unit Pass
@@ -100,5 +102,53 @@ MonoBehaviour:
         overrideMaterialPassName: Forward
         overrideDepthState: 0
         depthCompareFunction: 4
+        depthWrite: 1
+        shaderPass: 0
+    - rid: 3242761137150492726
+      type: {class: DrawRenderersCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      data:
+        m_Name: Transparent Pass
+        enabled: 1
+        targetColorBuffer: 0
+        targetDepthBuffer: 0
+        clearFlags: 0
+        passFoldout: 0
+        m_Version: 0
+        filterFoldout: 1
+        rendererFoldout: 0
+        renderQueueType: 7
+        layerMask:
+          serializedVersion: 2
+          m_Bits: 262144
+        sortingCriteria: 59
+        overrideMaterial: {fileID: 0}
+        overrideMaterialPassIndex: 0
+        overrideMaterialPassName: Forward
+        overrideDepthState: 0
+        depthCompareFunction: 4
+        depthWrite: 1
+        shaderPass: 0
+    - rid: 3242761137150492727
+      type: {class: DrawRenderersCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      data:
+        m_Name: UI Pass
+        enabled: 1
+        targetColorBuffer: 0
+        targetDepthBuffer: 0
+        clearFlags: 0
+        passFoldout: 0
+        m_Version: 0
+        filterFoldout: 1
+        rendererFoldout: 1
+        renderQueueType: 10
+        layerMask:
+          serializedVersion: 2
+          m_Bits: 32
+        sortingCriteria: 2147483647
+        overrideMaterial: {fileID: 0}
+        overrideMaterialPassIndex: 0
+        overrideMaterialPassName: Forward
+        overrideDepthState: 1
+        depthCompareFunction: 0
         depthWrite: 1
         shaderPass: 0

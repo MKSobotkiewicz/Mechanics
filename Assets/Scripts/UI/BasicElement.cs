@@ -42,7 +42,6 @@ namespace Project.UI
 
         public void Click()
         {
-            Debug.Log("CLICK");
             startVector = Input.mousePosition- GetComponent<RectTransform>().localPosition;
         }
 
@@ -52,13 +51,11 @@ namespace Project.UI
             {
                 return;
             }
-            Debug.Log("DRAG");
             GetComponent<RectTransform>().localPosition = Input.mousePosition - startVector;
         }
 
         public void ResetPosition()
         {
-            Debug.Log("RESET POSITION");
             GetComponent<RectTransform>().localPosition =new Vector3(0,0,0);
         }
 

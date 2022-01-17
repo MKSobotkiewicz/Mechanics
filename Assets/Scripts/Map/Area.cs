@@ -13,17 +13,19 @@ namespace Project.Map
         public Color WaterTilesColor;
         public Color MountainTilesColor;
         public Color PlainsTilesColor;
-        public UI.Area AreaUIPrefab;
+        //public UI.CityView CityView;
         public Vector3 Position;
         public River River;
         public float Humidity;
         public Resources.ResourceDepot ResourceDepot { get; private set; }
         public List<Resources.ResourceGenerator> ResourceGenerators { get; private set; } = new List<Resources.ResourceGenerator>();
         public bool Road = false;
+        public Forest Forest;
+        public City City;
         public AreaGroup AreaGroup { get; private set; }
 
         private UnityEngine.Material material;
-        private UI.Area areaUI;
+        private UI.CityView cityView;
         private int[] globeVertices;
         private Mesh globeMesh;
         private Mesh landformMesh;
@@ -57,7 +59,7 @@ namespace Project.Map
             ResourceDepot.transform.localPosition = new Vector3();
         }
 
-        public void Initialize(List<Area> areas, Player.Player _player)
+        public void Initialize(List<Area> areas, Player.Player _player,Canvas canvas)
         {
             player = _player;
             allAreas.Add(this);
@@ -66,9 +68,42 @@ namespace Project.Map
                 Debug.LogWarning(name+" is missing neighbours");
                 GetNeighbours(areas);
             }
-            canvas= UnityEngine.Camera.main.GetComponentInChildren<Canvas>();
-            areaUI = canvas.GetComponentInChildren<UI.Area>();
+            cityView = canvas.GetComponentInChildren<UI.CityView>();
+            if (cityView == null)
+            {
+                Debug.LogError("Missing CityView");
+            }
             SetMesh();
+        }
+
+        public Resources.ResourceValueList GetTotalResourceProduction()
+        {
+            var resources = new Resources.ResourceValueList();
+            foreach (var generator in ResourceGenerators)
+            {
+                resources+=generator.DailyProduction();
+            }
+            return resources;
+        }
+
+        public Resources.ResourceValueList GetTotalResourceCosts()
+        {
+            var resources = new Resources.ResourceValueList();
+            foreach (var generator in ResourceGenerators)
+            {
+                resources += generator.DailyCost();
+            }
+            return resources;
+        }
+
+        public Resources.ResourceValueList GetNetResourceProduction()
+        {
+            return GetTotalResourceProduction()- GetTotalResourceCosts();
+        }
+
+        public Resources.ResourceValueList GetNetResourceDeficit()
+        {
+            return GetTotalResourceCosts() - GetTotalResourceProduction();
         }
 
         public void Click()
@@ -114,14 +149,20 @@ namespace Project.Map
         public void Select()
         {
             material.SetFloat(selected, 1f);
-            areaUI.SetVisible(true);
-            areaUI.SetArea(this);
+            if (City != null)
+            {
+                cityView.SetVisible(true);
+                cityView.SetArea(this);
+            }
         }
 
         public void Unselect()
         {
             material.SetFloat(selected, 0f);
-            areaUI.SetVisible(false);
+            if (City != null)
+            {
+                cityView.SetVisible(false);
+            }
         }
 
         public void AddToAreaGroup(AreaGroup areaGroup)
@@ -322,9 +363,9 @@ namespace Project.Map
             AddAreaToMapGeneratorAreaLists(mapGenerator);
         }
 
-        public void AddResourceGenerator(Resources.ResourceGeneratorType resourceGeneratorType)
+        public void AddResourceGenerator(Resources.ResourceGeneratorType resourceGeneratorType,uint size)
         {
-            var rg = Resources.ResourceGenerator.Create(ResourceDepot, resourceGeneratorType, time);
+            var rg = Resources.ResourceGenerator.Create(ResourceDepot, resourceGeneratorType, size, time);
             rg.transform.parent = transform;
             rg.transform.localPosition = new Vector3();
             ResourceGenerators.Add(rg);

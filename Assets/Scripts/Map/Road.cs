@@ -26,7 +26,8 @@ namespace Project.Map
                 Debug.Log("no path");
                 Fail();
             }
-            CreateMesh(parent, material);
+            var spline=CreateMesh(parent, material);
+            spline.gameObject.AddComponent(typeof(Utility.LightDirection));
             allRoads.Add(this);
             foreach (var area in Areas)
             {
@@ -65,9 +66,10 @@ namespace Project.Map
             throw new Exception("Failed at creating road.");
         }
 
-        private void CreateMesh(Transform parent, UnityEngine.Material material)
+        private Spline.Spline CreateMesh(Transform parent, UnityEngine.Material material)
         {
             spline = Spline.Spline.CreateSpline(Areas, parent, material, "Road " + roadCount++, 2, 10, 0, Spline.Spline.EMarker.None,0);
+            return spline;
             /*int nodeCount = 0;
             spline = (new GameObject("Road " + roadCount++)).AddComponent<Spline.Spline>();
             spline.transform.parent = parent;

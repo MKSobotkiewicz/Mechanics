@@ -14,6 +14,7 @@ namespace Project.Map
         public List<Area> HillsAreas { get; private set; } = new List<Area>();
         public List<Area> PlainsAreas { get; private set; } = new List<Area>();
         public List<AreaGroup> AreaGroups { get; private set; } = new List<AreaGroup>();
+        public MeshFilter meshFilter;
 
         public List<Area> PossibleAreas()
         {

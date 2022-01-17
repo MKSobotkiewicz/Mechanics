@@ -11,6 +11,7 @@ namespace Project.Map
     {
         public GameObject AreaPrefab;
         public Player.Player Player;
+        public Canvas MainCanvas;
         public UnityEngine.UI.RawImage ScreenOverlay;
         public Resources.ResourceGeneratorType RiverGeneratorTypePrefab;
         public Forest ForestPrefab;
@@ -186,8 +187,9 @@ namespace Project.Map
 
         protected void SetAreasTypes()
         {
-            int idsPerArea = 40;
+            int idsPerArea = 20;
             var areas = MapData.Areas;
+            MapData.meshFilter = MeshFilter;
             Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
             var positions = new Vector3[areas.Count];
             for (int i = 0; i < areas.Count; i++)
@@ -226,7 +228,6 @@ namespace Project.Map
                 var verticesIds=new int[idsPerArea];
                 Array.Copy(ids, i * idsPerArea, verticesIds,0, idsPerArea);
                 areas[i].SetGlobeVertices(verticesIds);
-
             }
             Debug.Log("  instantiating meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
             vertices = MeshFilter.mesh.vertices;
@@ -295,9 +296,10 @@ namespace Project.Map
             var possibleAreas = MapData.PossibleAreas();
             foreach (var area in possibleAreas)
             {
-                if (area.Humidity > 0.8)
+                if (area.Humidity > 0.8&& area.City==null)
                 {
                     var forest = Forest.Create(ForestPrefab,area, forests.transform, SnowMovement,Time);
+                    area.Forest = forest;
                 }
             }
         }
@@ -372,7 +374,7 @@ namespace Project.Map
                     vertices.AddRange(area.GetGlobeVertices());
                     area.SetLandformVerticesColor(color);
                     area.Humidity = 1;
-                    area.AddResourceGenerator(RiverGeneratorTypePrefab);
+                    area.AddResourceGenerator(RiverGeneratorTypePrefab,1);
                 }
             }
             var colors = MeshFilter.mesh.colors;
@@ -437,7 +439,6 @@ namespace Project.Map
                 }
                 catch
                 {
-                    Debug.LogWarning("KURVA ");
                 }
             }
             Road.OptimizeAllRoads();
@@ -485,7 +486,7 @@ namespace Project.Map
                 var areas = mapGenerator.MapData.Areas;
                 foreach (var area in areas)
                 {
-                    area.Initialize(areas, player);
+                    area.Initialize(areas, player, mapGenerator.MainCanvas);
                 }
                 mapGenerator.textConsole.PushBack("optimizing areas meshes...");
             }
@@ -530,6 +531,7 @@ namespace Project.Map
             public static void GeneratingCitiesStep(MapGenerator mapGenerator)
             {
                 Debug.Log(mapGenerator.name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.CitiesGenerator.Init(mapGenerator.MeshFilter, mapGenerator.MapData, mapGenerator.MainCanvas);
                 mapGenerator.cities = mapGenerator.CitiesGenerator.Generate(mapGenerator.MapData.PlainsAreas);
                 mapGenerator.textConsole.PushBack("generating roads...");
             }

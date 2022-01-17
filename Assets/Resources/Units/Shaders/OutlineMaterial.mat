@@ -120,7 +120,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Distance: 0.05
+    - Distance: 0.0002
     - _AORemapMax: 1
     - _AORemapMin: 0
     - _ATDistance: 1

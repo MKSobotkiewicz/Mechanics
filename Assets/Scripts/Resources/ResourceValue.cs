@@ -49,7 +49,7 @@ namespace Project.Resources
             {
                 throw new ArgumentException("Tried to substract diffrent resources.");
             }
-            if (rv1.Value < rv2.Value)
+            if (rv1.Value <= rv2.Value)
             {
                 return null;
             }

@@ -22,12 +22,31 @@ namespace Project.Resources
         {
         }
 
-        public static ResourceGenerator Create(ResourceDepot _resourceDepot, ResourceGeneratorType _resourceGeneratorType, Time.Time Time)
+        public static ResourceGenerator Create(ResourceDepot _resourceDepot, ResourceGeneratorType _resourceGeneratorType,uint size, Time.Time time)
         {
-            return new GameObject(_resourceGeneratorType.name+" " + count++.ToString()).AddComponent<ResourceGenerator>().Initialize(_resourceDepot, _resourceGeneratorType,Time);
+            return new GameObject(_resourceGeneratorType.name+" " + count++.ToString()).AddComponent<ResourceGenerator>().Initialize(_resourceDepot, _resourceGeneratorType, size, time);
         }
 
-        private ResourceGenerator Initialize(ResourceDepot _resourceDepot,ResourceGeneratorType resourceGeneratorType, Time.Time Time)
+        public string GetName()
+        {
+            if (Size <= 1)
+            {
+                return ResourceGeneratorType.name;
+            }
+            return Size.ToString()+" "+ ResourceGeneratorType.name+"s";
+        }
+
+        public ResourceValueList DailyProduction()
+        {
+            return Size * (ResourceGeneratorType.ProductionPerDay as ResourceValueList);
+        }
+
+        public ResourceValueList DailyCost()
+        {
+            return Size * (ResourceGeneratorType.CostPerDay as ResourceValueList);
+        }
+
+        private ResourceGenerator Initialize(ResourceDepot _resourceDepot,ResourceGeneratorType resourceGeneratorType, uint size, Time.Time time)
         {
             if (resourceGeneratorType==null)
             {
@@ -39,16 +58,17 @@ namespace Project.Resources
                 Debug.LogWarning(name + " ResourceDepot is null");
                 return null;
             }
-            if (Time == null)
+            if (time == null)
             {
                 Debug.LogWarning(name + " Time is null");
                 return null;
             }
+            Size = size;
             initialized = true;
             resourceDepot = _resourceDepot;
             ResourceGeneratorType = resourceGeneratorType;
             transform.parent = resourceDepot.transform;
-            Time.AddDaily(this);
+            time.AddDaily(this);
             AllResurceGenerators.Add(this);
             TotalProductionPerDay += ResourceGeneratorType.ProductionPerDay as ResourceValueList;
             TotalCostPerDay += ResourceGeneratorType.CostPerDay as ResourceValueList;

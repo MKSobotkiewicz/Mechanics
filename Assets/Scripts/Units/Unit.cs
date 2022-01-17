@@ -7,38 +7,67 @@ using UnityEngine;
 
 namespace Project.Units
 {
-    public class Unit : MonoBehaviour, IMovable, Utility.IClicable
+    public class Unit : MonoBehaviour, IMovable, Utility.IClicable, UI.IFollowed
     {
         public bool Selected { get; private set; } = false;
         public UnitPath UnitPath;
         public float speed=1;
-        public List<GameObject> MovingEffects;
-
+        public Sprite Icon;
+        public uint MaxManpower=100;
+        public uint MaxCohesion=100;
+        
         private UI.Unit uiElement;
+        private UI.UnitBar unitBar;
         private Player.Player player;
+        private Organizations.Organization organization;
         private Map.Area location;
         private List<Map.Area> path;
         private float remainingTravelToNextArea;
-        private Animator animator;
+        private List<Animator> animators=new List<Animator>();
         private LayerMask layerMask;
+        private GameObject soldiers;
+        private uint manpower;
+        private uint cohesion;
 
         public static HashSet<Unit> AllUnits { get; private set; } = new HashSet<Unit>();
 
-        public void Init(Map.Area _location, Player.Player _player,Time.Time time)
+        public void Init(Map.Area _location, Player.Player _player, Organizations.Organization _organization,Time.Time time)
         {
-            animator = GetComponent<Animator>();
+            animators = GetComponentsInChildren<Animator>().ToList();
             time.AddHourly(this);
             player = _player;
             location = _location;
+            organization = _organization;
+            manpower = MaxManpower;
+            cohesion = MaxCohesion;
             UpdatePosition();
             AllUnits.Add(this);
             transform.LookAt(location.Neighbours[0].Position, transform.position.normalized);
-            animator.SetBool("Moving", false);
-            layerMask = ~LayerMask.GetMask("Unit","Outlined");
-            foreach (var movingEffect in MovingEffects)
+            CreateUIBar();
+            foreach (var animator in animators)
             {
-                movingEffect.SetActive(false);
+                animator.SetBool("Moving", false);
             }
+            layerMask = ~LayerMask.GetMask("Unit","Outlined");
+            var soldiersLM = LayerMask.NameToLayer("Soldiers");
+            foreach (var tr in transform.GetComponentsInChildren<Transform>())
+            {
+                if (tr.gameObject.layer == soldiersLM)
+                {
+                    soldiers = tr.gameObject;
+                    break;
+                }
+            }
+        }
+
+        public string Name()
+        {
+            return name;
+        }
+
+        public Vector3 FollowedPosition()
+        {
+            return Vector3.RotateTowards(transform.position, Vector3.down, 0.01f, 0);
         }
 
         public Map.Area Location()
@@ -70,10 +99,13 @@ namespace Project.Units
 
         public void SetSelected(bool value)
         {
-            if (value == Selected)
+            /*if (value == Selected)
             {
                 return;
-            }
+            }*/
+            var outlinedLM = LayerMask.NameToLayer("Outlined");
+            var unitLM = LayerMask.NameToLayer("Unit");
+            var tranparentLM = LayerMask.NameToLayer("Transparent");
             Selected = value;
             if (Selected)
             {
@@ -82,7 +114,10 @@ namespace Project.Units
                 Debug.Log("Selected");
                 foreach (var tr in transform.GetComponentsInChildren<Transform>())
                 {
-                    tr.gameObject.layer = LayerMask.NameToLayer("Outlined");
+                    if (tr.gameObject.layer != tranparentLM)
+                    {
+                        tr.gameObject.layer = outlinedLM;
+                    }
                 }
             }
             else
@@ -91,7 +126,10 @@ namespace Project.Units
                 player.SelectedUnits.Remove(this);
                 foreach (var tr in transform.GetComponentsInChildren<Transform>())
                 {
-                    tr.gameObject.layer = LayerMask.NameToLayer("Unit");
+                    if (tr.gameObject.layer != tranparentLM)
+                    {
+                        tr.gameObject.layer = unitLM;
+                    }
                 }
             }
         }
@@ -99,6 +137,11 @@ namespace Project.Units
         public float Speed()
         {
             return speed;
+        }
+
+        public Organizations.Organization GetOrganization()
+        {
+            return organization;
         }
 
         public float RemainingTravelToNextArea()
@@ -113,10 +156,13 @@ namespace Project.Units
             {
                 //uiElement.PathSuccess(path);
                 UpdatePosition();
-                animator.SetBool("Moving",true);
-                foreach (var movingEffect in MovingEffects)
+                foreach (var animator in animators)
                 {
-                    movingEffect.SetActive(true);
+                    animator.SetBool("Moving", true);
+                }
+                if (soldiers != null)
+                {
+                    soldiers.SetActive(false);
                 }
                 return true;
             }
@@ -151,10 +197,15 @@ namespace Project.Units
                 else if (path.Count == 1)
                 {
                     UnitPath.Destroy();
-                    animator.SetBool("Moving", false);
-                    foreach (var movingEffect in MovingEffects)
+                    foreach (var animator in animators)
                     {
-                        movingEffect.SetActive(false);
+                        animator.SetBool("Moving", false);
+                    }
+
+                    if (soldiers != null)
+                    {
+                        soldiers.SetActive(true);
+                        SetSelected(Selected);
                     }
                     path = null;
                 }
@@ -183,6 +234,16 @@ namespace Project.Units
             {
                 transform.position = hit.point;
             }
+        }
+
+        public void CreateUIBar()
+        {
+            unitBar = UI.UnitBar.Create(UnityEngine.Camera.main.GetComponentInChildren<Canvas>(),this);
+        }
+
+        public void UpdateUIBarValues()
+        {
+
         }
     }
 }

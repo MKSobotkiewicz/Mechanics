@@ -1,6 +1,6 @@
 #pragma kernel CSMain
 
-#define IDS_PER_AREA 40
+#define IDS_PER_AREA 20
 
 
 RWStructuredBuffer<float3> Vertices;
