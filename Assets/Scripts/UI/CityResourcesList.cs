@@ -21,7 +21,7 @@ namespace Project.UI
 
         private Map.Area area;
 
-        public void Init(Map.Area _area)
+        public void Update(Map.Area _area)
         {
             area = _area;
             foreach (var production in productions)

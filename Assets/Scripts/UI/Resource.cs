@@ -22,7 +22,7 @@ namespace Project.UI
             Debug.Log(value);
             resource = _resource;
             Image.sprite = resource.Icon;
-            NameText.text = resource.name;
+            NameText.text = resource.name.ToUpper();
             SetValue(value);
             return this;
         }

@@ -26,6 +26,7 @@ namespace Project.Map
 
         private UnityEngine.Material material;
         private UI.CityView cityView;
+        private UI.Area areaUi;
         private int[] globeVertices;
         private Mesh globeMesh;
         private Mesh landformMesh;
@@ -72,6 +73,11 @@ namespace Project.Map
             if (cityView == null)
             {
                 Debug.LogError("Missing CityView");
+            }
+            areaUi = canvas.GetComponentInChildren<UI.Area>();
+            if (areaUi == null)
+            {
+                Debug.LogError("Missing Area UI");
             }
             SetMesh();
         }
@@ -154,6 +160,11 @@ namespace Project.Map
                 cityView.SetVisible(true);
                 cityView.SetArea(this);
             }
+            else
+            {
+                areaUi.SetVisible(true);
+                areaUi.SetArea(this);
+            }
         }
 
         public void Unselect()
@@ -162,6 +173,10 @@ namespace Project.Map
             if (City != null)
             {
                 cityView.SetVisible(false);
+            }
+            else
+            {
+                areaUi.SetVisible(false);
             }
         }
 

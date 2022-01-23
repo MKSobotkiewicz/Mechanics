@@ -494,8 +494,8 @@ namespace Project.Map
             public static void OptimizingAreasMeshesStep(MapGenerator mapGenerator)
             {
                 Debug.Log(mapGenerator.name + " optimizing areas meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
-                Area.OptimizeMeshes(mapGenerator.MapData.WaterAreas, "Water Areas");
-                Area.OptimizeMeshes(mapGenerator.MapData.MountainAreas, "Mountain Areas");
+               // Area.OptimizeMeshes(mapGenerator.MapData.WaterAreas, "Water Areas");
+                //Area.OptimizeMeshes(mapGenerator.MapData.MountainAreas, "Mountain Areas");
                 mapGenerator.textConsole.PushBack("generating rivers...");
             }
 

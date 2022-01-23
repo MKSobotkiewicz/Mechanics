@@ -7,15 +7,15 @@ using UnityEngine;
 
 namespace Project.Units
 {
-    public class Unit : MonoBehaviour, IMovable, Utility.IClicable, UI.IFollowed
+    public class Unit : MonoBehaviour, IMovable, Utility.IClicable, UI.IFollowed,Time.IDaily
     {
         public bool Selected { get; private set; } = false;
+        public int CurrentEntrenchment { get; private set; }
         public UnitPath UnitPath;
-        public float speed=1;
         public Sprite Icon;
-        public uint MaxManpower=100;
-        public uint MaxCohesion=100;
-        
+        public UnitTemplate UnitTemplate;
+
+        private Transform unitPaths;
         private UI.Unit uiElement;
         private UI.UnitBar unitBar;
         private Player.Player player;
@@ -31,16 +31,18 @@ namespace Project.Units
 
         public static HashSet<Unit> AllUnits { get; private set; } = new HashSet<Unit>();
 
-        public void Init(Map.Area _location, Player.Player _player, Organizations.Organization _organization,Time.Time time)
-        {
+        public void Init(Map.Area _location, Player.Player _player, Organizations.Organization _organization, Transform _unitPaths,Time.Time time)
+        { 
             animators = GetComponentsInChildren<Animator>().ToList();
             time.AddHourly(this);
+            time.AddDaily(this);
+            unitPaths =_unitPaths;
             player = _player;
             location = _location;
             organization = _organization;
-            manpower = MaxManpower;
-            cohesion = MaxCohesion;
-            UpdatePosition();
+            manpower = UnitTemplate.MaxManpower;
+            cohesion = UnitTemplate.MaxCohesion;
+            UpdatePosition(true);
             AllUnits.Add(this);
             transform.LookAt(location.Neighbours[0].Position, transform.position.normalized);
             CreateUIBar();
@@ -86,7 +88,7 @@ namespace Project.Units
 
         public void Order()
         {
-            //Attack or something
+            //Attack
         }
 
         public void Unclick()
@@ -136,7 +138,7 @@ namespace Project.Units
 
         public float Speed()
         {
-            return speed;
+            return UnitTemplate.Speed;
         }
 
         public Organizations.Organization GetOrganization()
@@ -155,7 +157,7 @@ namespace Project.Units
             if (path!=null)
             {
                 //uiElement.PathSuccess(path);
-                UpdatePosition();
+                UpdatePosition(false);
                 foreach (var animator in animators)
                 {
                     animator.SetBool("Moving", true);
@@ -168,6 +170,17 @@ namespace Project.Units
             }
             //uiElement.PathFail();
             return false;
+        }
+
+        public uint Priority()
+        {
+            return 12;
+        }
+
+        public void DailyUpdate()
+        {
+            CurrentEntrenchment++;
+            CurrentEntrenchment = CurrentEntrenchment > UnitTemplate.Defense.MaxEntrenchment ? UnitTemplate.Defense.MaxEntrenchment : CurrentEntrenchment;
         }
 
         public void HourlyUpdate()
@@ -209,11 +222,11 @@ namespace Project.Units
                     }
                     path = null;
                 }
-                UpdatePosition();
+                UpdatePosition(false);
             }
         }
 
-        public void UpdatePosition()
+        public void UpdatePosition(bool instant)
         {
             var hit = new RaycastHit();
             if (path != null)
@@ -222,17 +235,34 @@ namespace Project.Units
                 {
                     if (Physics.Raycast(Vector3.Lerp(location.Position,path[1].Position,0.25f) * 1.1f, -location.Position.normalized, out hit, Mathf.Infinity, layerMask))
                     {
-                        transform.position = hit.point;
-                        transform.LookAt(path[1].Position, transform.position.normalized);
+                        if (!instant)
+                        {
+                            transform.LookAt(hit.point, transform.position.normalized);
+                            LeanTween.move(gameObject, hit.point, 0.5f).setEaseInOutSine().setOnComplete(() => { LeanTween.rotate(gameObject, Quaternion.LookRotation(path[1].Position - location.Position, transform.position.normalized).eulerAngles,0.2f); });
+                        }
+                        else
+                        {
+                            transform.LookAt(path[1].Position, transform.position.normalized);
+                            transform.position = hit.point;
+                        }
                         UnitPath.Destroy();
-                        UnitPath.Create(this,path);
+                        UnitPath.Create(hit.point, path, unitPaths);
                     }
                     return;
                 }
             }
             if (Physics.Raycast(location.Position * 1.1f, -location.Position.normalized, out hit, Mathf.Infinity))
             {
-                transform.position = hit.point;
+                if (!instant)
+                {
+                    transform.LookAt(hit.point, transform.position.normalized);
+                    LeanTween.move(gameObject, hit.point, 0.5f).setEaseInOutSine();
+                }
+                else
+                {
+                    transform.LookAt(hit.point, transform.position.normalized);
+                    transform.position = hit.point;
+                }
             }
         }
 

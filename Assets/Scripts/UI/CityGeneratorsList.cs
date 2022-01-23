@@ -15,7 +15,7 @@ namespace Project.UI
 
         private List<ResourceGenerator> resourceGenerators=new List<ResourceGenerator>();
 
-        public void Init(Map.Area area)
+        public void Update(Map.Area area)
         {
             foreach (var resourceGenerator in resourceGenerators)
             {

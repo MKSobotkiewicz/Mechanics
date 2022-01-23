@@ -9,52 +9,37 @@ namespace Project.Units
     [Serializable]
     public class Attack
     {
-        public List<Dices.EDice> Rolls;
-        public int Bonus=0;
-        public int Piercing=0;
+        public int Piercing { get; set; }
+        public int Breakthrough { get; set; }
+        public int Terror { get; set; }
+        public int ManpowerAttackBonus { get; set; }
+        public int CohesionAttackBonus { get; set; }
+        public Dices.IDice[] ManpowerAttackDices { get; set; }
+        public Dices.IDice[] CohesionAttackDices { get; set; }
 
-        private Dices.IDice[] rolls;
-
-        public void Init()
+        public Tuple<int,int> Commit(int armor, int entrenchment, int morale)
         {
-            rolls = new Dices.IDice[Rolls.Count];
-            for (int i=0;i< Rolls.Count;i++)
+            var unpenetratedArmor = armor-Piercing;
+            unpenetratedArmor = unpenetratedArmor < 0 ? 0 : unpenetratedArmor;
+            var unbrokenEntrenchment = entrenchment - Breakthrough;
+            unbrokenEntrenchment = unbrokenEntrenchment < 0 ? 0 : unbrokenEntrenchment;
+            var manpowerAttackValue = ManpowerAttackBonus - unbrokenEntrenchment - unpenetratedArmor;
+            foreach (var dice in ManpowerAttackDices)
             {
-                switch (Rolls[i])
-                {
-                    case Dices.EDice.D4:
-                        rolls[i] = new Dices.D4();
-                        break;
-                    case Dices.EDice.D6:
-                        rolls[i] = new Dices.D6();
-                        break;
-                    case Dices.EDice.D8:
-                        rolls[i] = new Dices.D8();
-                        break;
-                    case Dices.EDice.D10:
-                        rolls[i] = new Dices.D10();
-                        break;
-                    case Dices.EDice.D12:
-                        rolls[i] = new Dices.D12();
-                        break;
-                    default:
-                        UnityEngine.Debug.LogError("Wrong dice.");
-                        break;
-                }
+                manpowerAttackValue += dice.Roll();
             }
-        }
+            manpowerAttackValue = manpowerAttackValue < 0 ? 0 : manpowerAttackValue;
 
-        public int Commit(int armor)
-        {
-            var attackValue = Piercing - armor;
-            attackValue = attackValue > 0 ? 0 : attackValue;
-            attackValue += Bonus;
-            foreach (var roll in rolls)
+            var steadfastness = morale - Terror;
+            steadfastness = steadfastness < 0 ? 0 : steadfastness;
+            var cohesionAttackValue = CohesionAttackBonus - steadfastness;
+            foreach (var dice in CohesionAttackDices)
             {
-                attackValue += roll.Roll();
+                cohesionAttackValue += dice.Roll();
             }
-            attackValue = attackValue < 0 ? 0 : attackValue;
-            return attackValue;
+            cohesionAttackValue = cohesionAttackValue < 0 ? 0 : cohesionAttackValue;
+
+            return new Tuple<int,int>(manpowerAttackValue, cohesionAttackValue);
         }
     }
 }

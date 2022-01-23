@@ -32,8 +32,12 @@ namespace Project.UI
 
         public void DailyUpdate()
         {
-            CityGeneratorsList.Init(area);
-            CityResourcesList.Init(area);
+            if (area is null)
+            {
+                return;
+            }
+            CityGeneratorsList.Update(area);
+            CityResourcesList.Update(area);
         }
 
         public uint Priority()
@@ -65,8 +69,8 @@ namespace Project.UI
         public void SetArea(Map.Area _area)
         {
             area = _area;
-            CityGeneratorsList.Init(area);
-            CityResourcesList.Init(area);
+            CityGeneratorsList.Update(area);
+            CityResourcesList.Update(area);
         }
 
         private void SetInvisible()

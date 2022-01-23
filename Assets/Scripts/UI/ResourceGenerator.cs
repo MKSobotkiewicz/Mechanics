@@ -25,7 +25,7 @@ namespace Project.UI
             }
             resourcesList.Clear();
             resourceGenerator = _resourceGenerator;
-            Name.text = resourceGenerator.GetName();
+            Name.text = resourceGenerator.GetName().ToUpper();
             foreach (var shownResource in resourceGenerator.DailyProduction())
             {
                 resourcesList.Add(Instantiate(ResourcePrefab, resourcesListRectTransform.transform).Init(shownResource.Resource, (long)shownResource.Value));

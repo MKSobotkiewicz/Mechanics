@@ -1,0 +1,102 @@
+﻿using UnityEngine;
+using UnityEditor;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Project.Units;
+
+namespace Project.Units
+{
+    [CustomEditor(typeof(UnitTemplate))]
+    [CanEditMultipleObjects]
+    class UnitTemplateEditor : Editor
+    {
+        private List<Dices.EDice> manpowerDices = new List<Dices.EDice>();
+        private List<Dices.EDice> cohesionDices = new List<Dices.EDice>();
+        private Dices.DiceFactory diceFactory = new Dices.DiceFactory();
+
+        void OnEnable()
+        {
+
+        }
+
+        public override void OnInspectorGUI()
+        {
+            UnitTemplate unitTemplate = (UnitTemplate)target;
+
+            EditorGUILayout.HelpBox("Manpower represents unit soldiers. Lower manpower makes all unit attacks proportionally lower. When Manpower reaches zero the unit is destroyed.", MessageType.None);
+            unitTemplate.MaxManpower = (uint)EditorGUILayout.IntSlider("Max Manpower", (int)unitTemplate.MaxManpower, 10, 500);
+            EditorGUILayout.HelpBox("Cohesion represents unit capability to fight. Does not affect unit attacks, but cohesion of 0 makes unit rout.", MessageType.None);
+            unitTemplate.MaxCohesion = (uint)EditorGUILayout.IntSlider("Max Cohesion", (int)unitTemplate.MaxCohesion, 10, 500);
+
+            EditorGUILayout.LabelField("Attack", EditorStyles.miniLabel);
+            EditorGUI.indentLevel++;
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Manpower Attack Dices");
+            if (GUILayout.Button("-") && manpowerDices.Count > 0)
+            {
+                manpowerDices.RemoveAt(manpowerDices.Count - 1);
+            }
+            if (GUILayout.Button("+"))
+            {
+                manpowerDices.Add(Dices.EDice.D4);
+            }
+            GUILayout.EndHorizontal();
+            EditorGUILayout.HelpBox("Attacks  against enemy manpower. Neutralizes opposing forces, making their attacks proportionally lower. When Manpower reaches zero enemy unit is destroyed.", MessageType.None);
+            for (int i=0;i< manpowerDices.Count;i++)
+            {
+                manpowerDices[i] = (Dices.EDice)EditorGUILayout.EnumPopup(manpowerDices[i]);
+            }
+            unitTemplate.Attack.ManpowerAttackDices = new Dices.IDice[manpowerDices.Count];
+            for (int i=0;i< manpowerDices.Count;i++)
+            {
+                unitTemplate.Attack.ManpowerAttackDices[i] = diceFactory.Create(manpowerDices[i]);
+            }
+            EditorGUILayout.HelpBox("Base bonus to attacks against enemy manpower.", MessageType.None);
+            unitTemplate.Attack.ManpowerAttackBonus = EditorGUILayout.IntSlider("Manpower Attack Bonus", unitTemplate.Attack.ManpowerAttackBonus, 0, 20);
+            EditorGUILayout.HelpBox("Piercing negates enemy armor(manpower defense).", MessageType.None);
+            unitTemplate.Attack.Piercing = EditorGUILayout.IntSlider("Piercing", unitTemplate.Attack.Piercing, 0, 20);
+            EditorGUILayout.HelpBox("Breakthrough negates enemy entrenchment(manpower defense).", MessageType.None);
+
+            unitTemplate.Attack.Breakthrough = EditorGUILayout.IntSlider("Breakthrough", unitTemplate.Attack.Breakthrough, 0, 20);
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Cohesion Attack Dices");
+            if (GUILayout.Button("-") && cohesionDices.Count > 0)
+            {
+                cohesionDices.RemoveAt(cohesionDices.Count - 1);
+            }
+            if (GUILayout.Button("+"))
+            {
+                cohesionDices.Add(Dices.EDice.D4);
+            }
+            GUILayout.EndHorizontal();
+            EditorGUILayout.HelpBox("Attacks against enemy cohesion. Does not neutralize enemy forces, but cohesion of 0 makes unit rout.", MessageType.None);
+            for (int i = 0; i < cohesionDices.Count; i++)
+            {
+                cohesionDices[i] = (Dices.EDice)EditorGUILayout.EnumPopup(cohesionDices[i]);
+            }
+            unitTemplate.Attack.CohesionAttackDices = new Dices.IDice[cohesionDices.Count];
+            for (int i = 0; i < cohesionDices.Count; i++)
+            {
+                unitTemplate.Attack.CohesionAttackDices[i] = diceFactory.Create(cohesionDices[i]);
+            }
+            EditorGUILayout.HelpBox("Base bonus to attacks against enemy cohesion.", MessageType.None);
+            unitTemplate.Attack.CohesionAttackBonus = EditorGUILayout.IntSlider("Cohesion Atack Bonus", unitTemplate.Attack.CohesionAttackBonus, 0, 20);
+            EditorGUILayout.HelpBox("Terror negates enemy morale(cohesion defense).", MessageType.None);
+            unitTemplate.Attack.Terror = EditorGUILayout.IntSlider("Terror", unitTemplate.Attack.Terror, 0, 20);
+            EditorGUI.indentLevel=0;
+            
+            EditorGUILayout.LabelField("Defense", EditorStyles.miniLabel);
+            EditorGUI.indentLevel++;
+            EditorGUILayout.HelpBox("Armor is a defense against attacks targeting manpower.", MessageType.None);
+            unitTemplate.Defense.Armor = EditorGUILayout.IntSlider("Armor", unitTemplate.Defense.Armor, 0, 20);
+            EditorGUILayout.HelpBox("Entrenchment is a defense against attacks targeting manpower. It needs time to fill, increasing by 1 every day, starting from 0.", MessageType.None);
+            unitTemplate.Defense.MaxEntrenchment = EditorGUILayout.IntSlider("Max Entrenchment", unitTemplate.Defense.MaxEntrenchment, 0, 20);
+            EditorGUILayout.HelpBox("Morale is a defense against attacks targeting cohesion.", MessageType.None);
+            unitTemplate.Defense.Morale = EditorGUILayout.IntSlider("Morale", unitTemplate.Defense.Morale, 0, 20);
+            EditorGUI.indentLevel = 0;
+        }
+    }
+}

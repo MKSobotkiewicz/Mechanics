@@ -18,14 +18,15 @@ namespace Project.Camera
         public float CameraZoomTargetY = 0F;
         public float CameraZoomSpeed = 1000F;
         public float MaxZoom = -8000f;
+        public float MinZoom = -60000f;
 
         public float CameraOrtZoomTarget = 2000F;
         public float CameraOrtZoomSpeed = 50F;
         public float MaxOrtZoom = 200f;
-        
+        public float BaseZ { get; private set; } = 0;
+
         private new UnityEngine.Camera camera;
-        private float distanceClippingPlaneDiffrence;
-        private float baseZ;
+        //private float distanceClippingPlaneDiffrence;
 
         void Start()
         {
@@ -34,8 +35,8 @@ namespace Project.Camera
             {
                 Debug.LogError(name+" missing Camera.");
             }
-            baseZ = camera.transform.localPosition.z;
-            distanceClippingPlaneDiffrence = -camera.farClipPlane- baseZ;
+            BaseZ = camera.transform.localPosition.z;
+            //distanceClippingPlaneDiffrence = -camera.farClipPlane- baseZ;
             CameraZoomTargetZ = camera.transform.localPosition.z;
             /*var distances = new float[32];
             distances[0] = 40000;
@@ -68,11 +69,18 @@ namespace Project.Camera
             else
             {
                 CameraZoomTargetZ = CameraZoomTargetZ + Input.GetAxis("Zoom") * CameraZoomSpeed;
-                if (CameraZoomTargetZ > MaxZoom) CameraZoomTargetZ = MaxZoom;
-                var CameraZoomTargetY = (CameraZoomTargetZ - baseZ)/10;
+                if (CameraZoomTargetZ > MaxZoom)
+                {
+                    CameraZoomTargetZ = MaxZoom;
+                }
+                else if (CameraZoomTargetZ < MinZoom)
+                {
+                    CameraZoomTargetZ = MinZoom;
+                }
+                var CameraZoomTargetY = (CameraZoomTargetZ - BaseZ) /10;
                 //camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, CameraZoomTarget, UnityEngine.Time.fixedDeltaTime * smooth);
                 camera.transform.localPosition = Vector3.Lerp(new Vector3(0, camera.transform.localPosition.y, camera.transform.localPosition.z), new Vector3(0, CameraZoomTargetY, CameraZoomTargetZ), UnityEngine.Time.fixedDeltaTime * smooth);
-                camera.farClipPlane =- camera.transform.localPosition.z-distanceClippingPlaneDiffrence;
+                //camera.farClipPlane =- camera.transform.localPosition.z-distanceClippingPlaneDiffrence;
             }
         }
     }

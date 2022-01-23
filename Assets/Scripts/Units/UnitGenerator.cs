@@ -13,6 +13,7 @@ namespace Project.Units
         public Organizations.Organization Organization;
         public Time.Time Time;
         public List<Unit> Units;
+        public Transform UnitPaths;
 
         public Unit Generate(Unit unitType, Map.Area area)
         {
@@ -22,7 +23,7 @@ namespace Project.Units
                 {
                     var newUnitGO=Instantiate(unit.gameObject);
                     var newUnit = newUnitGO.GetComponent<Unit>();
-                    newUnit.Init(area, Player, Organization, Time);
+                    newUnit.Init(area, Player, Organization, UnitPaths, Time);
                     return newUnit;
                 }
             }

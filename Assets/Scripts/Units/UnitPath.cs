@@ -16,16 +16,16 @@ namespace Project.Units
         private Spline.Spline spline;
         private MeshRenderer splineMeshRenderer;
 
-            public void Create(Unit unit,List<Map.Area> path)
+        public void Create(Vector3 start, List<Map.Area> path, Transform unitPaths)
         {
             Destroy();
             List<Vector3> positions = new List<Vector3>();
-            positions.Add(unit.transform.position);
+            positions.Add(start);
             for (int i = 1; i < path.Count; i++)
             {
                 positions.Add(path[i].Position);
             }
-            spline = Spline.Spline.CreateSpline(positions, transform, SelectedMaterial, "Unit Path", 5, 10, 1, Spline.Spline.EMarker.EndWithArrow, 0);
+            spline = Spline.Spline.CreateSpline(positions, unitPaths, SelectedMaterial, "Unit Path", 5, 10, 1, Spline.Spline.EMarker.EndWithArrow, 0);
             splineMeshRenderer = spline.GetComponent<MeshRenderer>();
         }
 

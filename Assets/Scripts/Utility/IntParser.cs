@@ -12,53 +12,88 @@ namespace Project.Utility
     {
         public static string Parse(long value)
         {
-            var prefix="";
-            if (value >= 10000000000000000 || value <= -10000000000000000)
-            {
-                prefix = "P";
-                value /= 1000000000000000;
-            }
-            else if (value >= 10000000000000 || value <= -10000000000000)
-            {
-                prefix = "T";
-                value /= 1000000000000;
-            }
-            else if (value >= 10000000000 || value <= -10000000000)
-            {
-                prefix = "G";
-                value /= 1000000000;
-            }
-            else if (value >= 10000000 || value <= -10000000)
-            {
-                prefix = "M";
-                value /= 1000000;
-            }
-            else if (value >= 10000 || value <= -10000)
-            {
-                prefix = "k";
-                value /= 1000;
-            }
             if (value == 0)
             {
                 return "00000";
             }
+            var prefix = Prefix.none;
             if (value > 0)
             {
-                if (prefix.Length > 0)
+                if (value >= 10000000000000000 || value <= -10000000000000000)
                 {
-                    return value.ToString("0000") + prefix;
+                    prefix = Prefix.P;
+                    value /= 1000000000000000;
                 }
-                return value.ToString("00000") + prefix;
+                else if (value >= 10000000000000 || value <= -10000000000000)
+                {
+                    prefix = Prefix.T;
+                    value /= 1000000000000;
+                }
+                else if (value >= 10000000000 || value <= -10000000000)
+                {
+                    prefix = Prefix.G;
+                    value /= 1000000000;
+                }
+                else if (value >= 10000000 || value <= -10000000)
+                {
+                    prefix = Prefix.M;
+                    value /= 1000000;
+                }
+                else if (value >= 10000 || value <= -10000)
+                {
+                    prefix = Prefix.k;
+                    value /= 1000;
+                }
+                if (prefix != Prefix.none)
+                {
+                    return value.ToString("0000") + prefix.ToString();
+                }
+                return value.ToString("00000");
+            }
+            if (value >= 1000000000000000 || value <= -1000000000000000)
+            {
+                prefix = Prefix.P;
+                value /= 1000000000000000;
+            }
+            else if (value >= 1000000000000 || value <= -1000000000000)
+            {
+                prefix = Prefix.T;
+                value /= 100000000000;
+            }
+            else if (value >= 1000000000 || value <= -1000000000)
+            {
+                prefix = Prefix.G;
+                value /= 1000000000;
+            }
+            else if (value >= 1000000 || value <= -1000000)
+            {
+                prefix = Prefix.M;
+                value /= 1000000;
+            }
+            else if (value >= 1000 || value <= -1000)
+            {
+                prefix = Prefix.k;
+                value /= 1000;
             }
             if (value < 0)
             {
-                if (prefix.Length > 0)
+                if (prefix != Prefix.none)
                 {
-                    return value.ToString("000") + prefix;
+                    return value.ToString("000") + prefix.ToString();
                 }
-                return value.ToString("0000") + prefix;
+                return value.ToString("0000");
             }
             return "ERROR";
-        } 
+        }
+
+        public enum Prefix
+        {
+            none=0,
+            k=1,
+            M=2,
+            G=3,
+            T=4,
+            P=5
+        }
     }
 }

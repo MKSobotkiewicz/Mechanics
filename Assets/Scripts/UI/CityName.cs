@@ -14,7 +14,7 @@ namespace Project.UI
 
         public void UpdateName()
         {
-            Name.text = followed.Name();
+            Name.text = followed.Name().ToUpper();
         }
     }
 }

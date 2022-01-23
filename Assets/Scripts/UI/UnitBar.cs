@@ -25,11 +25,8 @@ namespace Project.UI
 
         public static UnitBar Create(Canvas canvas, Units.Unit _unit)
         {
-            var go = Instantiate(UnityEngine.Resources.Load("UI/Prefabs/Units/UnitBarCanvas"))as GameObject;
-            go.transform.parent = canvas.transform;
-            go.transform.localPosition = new Vector3();
-            go.transform.localRotation = new Quaternion();
-            var ub=go.AddComponent(typeof(UnitBar))as UnitBar;
+            var go = Instantiate(UnityEngine.Resources.Load("UI/Prefabs/Units/UnitBarCanvas"),canvas.transform)as GameObject;
+            var ub = go.GetComponent<UnitBar>();
             ub.UpdateFollowed(_unit);
             ub.UpdateIcon(_unit);
             return ub;

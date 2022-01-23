@@ -48,6 +48,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UnitPath: {fileID: 3835168767271993815}
   speed: 1
+  Icon: {fileID: -1346487378, guid: 1723538aec4a4bc45a2ade3a082e4e14, type: 3}
+  MaxManpower: 100
+  MaxCohesion: 100
 --- !u!1 &6834094594513343479
 GameObject:
   m_ObjectHideFlags: 0
