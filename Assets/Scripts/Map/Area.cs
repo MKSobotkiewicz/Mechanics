@@ -263,15 +263,15 @@ namespace Project.Map
         {
             if (Road)
             {
-                return 0.5f;
+                return 1;
             }
             if (Type == EType.Plains)
             {
-                return 1;
+                return 2;
             }
             if (Type == EType.Hills)
             {
-                return 2;
+                return 4;
             }
             return float.MaxValue;
         }

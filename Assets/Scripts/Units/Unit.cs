@@ -11,9 +11,13 @@ namespace Project.Units
     {
         public bool Selected { get; private set; } = false;
         public int CurrentEntrenchment { get; private set; }
+        public int MaxEntrenchment { get; private set; }
+        public uint MaxManpower { get; private set; }
+        public uint MaxCohesion { get; private set; }
         public UnitPath UnitPath;
         public Sprite Icon;
-        public UnitTemplate UnitTemplate;
+        public UnitTemplate Template;
+        public List<UnitTemplate> Enchancements=new List<UnitTemplate>();
 
         private Transform unitPaths;
         private UI.Unit uiElement;
@@ -40,8 +44,17 @@ namespace Project.Units
             player = _player;
             location = _location;
             organization = _organization;
-            manpower = UnitTemplate.MaxManpower;
-            cohesion = UnitTemplate.MaxCohesion;
+            manpower = Template.MaxManpower;
+            cohesion = Template.MaxCohesion;
+            MaxEntrenchment = Template.Defense.MaxEntrenchment;
+            MaxManpower = Template.MaxManpower;
+            MaxCohesion = Template.MaxCohesion;
+            foreach (var enchancement in Enchancements)
+            {
+                MaxEntrenchment += enchancement.Defense.MaxEntrenchment;
+                MaxManpower += enchancement.MaxManpower;
+                MaxCohesion += enchancement.MaxCohesion;
+            }
             UpdatePosition(true);
             AllUnits.Add(this);
             transform.LookAt(location.Neighbours[0].Position, transform.position.normalized);
@@ -88,7 +101,68 @@ namespace Project.Units
 
         public void Order()
         {
-            //Attack
+        }
+
+        public AttackInfo Attack(Unit target)
+        {
+            var attackInfo = new AttackInfo();
+            attackInfo.Piercing = Template.Attack.Piercing;
+            attackInfo.Breakthrough = Template.Attack.Breakthrough;
+            attackInfo.Terror = Template.Attack.Terror;
+            attackInfo.ManpowerAttack = Template.Attack.ManpowerAttackBonus;
+            attackInfo.CohesionAttack = Template.Attack.CohesionAttackBonus;
+            foreach (var enchancement in Enchancements)
+            {
+                attackInfo.Piercing += enchancement.Attack.Piercing;
+                attackInfo.Breakthrough += enchancement.Attack.Breakthrough;
+                attackInfo.Terror += enchancement.Attack.Terror;
+                attackInfo.ManpowerAttack += enchancement.Attack.ManpowerAttackBonus;
+                attackInfo.CohesionAttack += enchancement.Attack.CohesionAttackBonus;
+            }
+
+            attackInfo.Armor = target.Template.Defense.Armor;
+            attackInfo.Morale = target.Template.Defense.Morale;
+            foreach (var targetEnchancement in target.Enchancements)
+            {
+                attackInfo.Armor += targetEnchancement.Defense.Armor;
+                attackInfo.Morale += targetEnchancement.Defense.Morale;
+            }
+
+            attackInfo.UnpenetratedArmor = attackInfo.Armor - attackInfo.Piercing;
+            attackInfo.UnpenetratedArmor = attackInfo.UnpenetratedArmor < 0 ? 0 : attackInfo.UnpenetratedArmor;
+            attackInfo.UnbrokenEntrenchment = target.CurrentEntrenchment - attackInfo.Breakthrough;
+            attackInfo.UnbrokenEntrenchment = attackInfo.UnbrokenEntrenchment < 0 ? 0 : attackInfo.UnbrokenEntrenchment;
+            attackInfo.ManpowerAttack = attackInfo.ManpowerAttack - attackInfo.UnbrokenEntrenchment - attackInfo.UnpenetratedArmor;
+            foreach (var dice in Template.Attack.ManpowerAttackDices)
+            {
+                attackInfo.ManpowerAttack += dice.Roll();
+            }
+            foreach (var enchancement in Enchancements)
+            {
+                foreach (var dice in enchancement.Attack.ManpowerAttackDices)
+                {
+                    attackInfo.ManpowerAttack += dice.Roll();
+                }
+            }
+            attackInfo.ManpowerAttack = attackInfo.ManpowerAttack < 0 ? 0 : attackInfo.ManpowerAttack;
+
+            attackInfo.Steadfastness = attackInfo.Morale - attackInfo.Terror;
+            attackInfo.Steadfastness = attackInfo.Steadfastness < 0 ? 0 : attackInfo.Steadfastness;
+            attackInfo.CohesionAttack = attackInfo.CohesionAttack - attackInfo.Steadfastness;
+            foreach (var dice in Template.Attack.CohesionAttackDices)
+            {
+                attackInfo.CohesionAttack += dice.Roll();
+            }
+            foreach (var enchancement in Enchancements)
+            {
+                foreach (var dice in enchancement.Attack.CohesionAttackDices)
+                {
+                    attackInfo.CohesionAttack += dice.Roll();
+                }
+            }
+            attackInfo.CohesionAttack = attackInfo.CohesionAttack < 0 ? 0 : attackInfo.CohesionAttack;
+
+            return attackInfo;
         }
 
         public void Unclick()
@@ -138,7 +212,12 @@ namespace Project.Units
 
         public float Speed()
         {
-            return UnitTemplate.Speed;
+            var speed = Template.Speed;
+            foreach (var enchancement in Enchancements)
+            {
+                speed += enchancement.Speed;
+            }
+            return speed;
         }
 
         public Organizations.Organization GetOrganization()
@@ -153,7 +232,7 @@ namespace Project.Units
 
         public bool Move(Map.Area target)
         {
-            path = Utility.Pathfinder.FindPath(location,target);
+            path = Utility.Pathfinder.FindPath(location,target, Template.IgnoreTerrain);
             if (path!=null)
             {
                 //uiElement.PathSuccess(path);
@@ -180,7 +259,7 @@ namespace Project.Units
         public void DailyUpdate()
         {
             CurrentEntrenchment++;
-            CurrentEntrenchment = CurrentEntrenchment > UnitTemplate.Defense.MaxEntrenchment ? UnitTemplate.Defense.MaxEntrenchment : CurrentEntrenchment;
+            CurrentEntrenchment = CurrentEntrenchment > MaxEntrenchment ? MaxEntrenchment : CurrentEntrenchment;
         }
 
         public void HourlyUpdate()
@@ -205,7 +284,7 @@ namespace Project.Units
                 location = path[0];
                 if (path.Count > 1)
                 {
-                    remainingTravelToNextArea += path[0].Weight();
+                    remainingTravelToNextArea += Template.IgnoreTerrain?1: path[0].Weight();
                 }
                 else if (path.Count == 1)
                 {

@@ -24,6 +24,19 @@ namespace Project.Units
         {
             UnitTemplate unitTemplate = (UnitTemplate)target;
 
+            EditorGUILayout.HelpBox("Checks if it's standalone unit or enchancement to other units.", MessageType.None);
+            unitTemplate.Enchancement = EditorGUILayout.Toggle("Enchancement", unitTemplate.Enchancement);
+
+            EditorGUILayout.LabelField("Movement", EditorStyles.miniLabel);
+            EditorGUI.indentLevel++;
+            EditorGUILayout.HelpBox("Unit speed in areas/hour(on road).", MessageType.None);
+            unitTemplate.Speed = EditorGUILayout.FloatField("Speed", unitTemplate.Speed);
+            EditorGUILayout.HelpBox("Ignore Terrain Modifiers defines if unit should ignore terrain modifiers while moving. Good for things like air mobile units.", MessageType.None);
+            unitTemplate.IgnoreTerrain = EditorGUILayout.Toggle("Ignore Terrain Modifiers", unitTemplate.IgnoreTerrain);
+            EditorGUI.indentLevel--;
+
+            EditorGUILayout.LabelField("Combat stats", EditorStyles.miniLabel);
+            EditorGUI.indentLevel++;
             EditorGUILayout.HelpBox("Manpower represents unit soldiers. Lower manpower makes all unit attacks proportionally lower. When Manpower reaches zero the unit is destroyed.", MessageType.None);
             unitTemplate.MaxManpower = (uint)EditorGUILayout.IntSlider("Max Manpower", (int)unitTemplate.MaxManpower, 10, 500);
             EditorGUILayout.HelpBox("Cohesion represents unit capability to fight. Does not affect unit attacks, but cohesion of 0 makes unit rout.", MessageType.None);
@@ -86,7 +99,7 @@ namespace Project.Units
             unitTemplate.Attack.CohesionAttackBonus = EditorGUILayout.IntSlider("Cohesion Atack Bonus", unitTemplate.Attack.CohesionAttackBonus, 0, 20);
             EditorGUILayout.HelpBox("Terror negates enemy morale(cohesion defense).", MessageType.None);
             unitTemplate.Attack.Terror = EditorGUILayout.IntSlider("Terror", unitTemplate.Attack.Terror, 0, 20);
-            EditorGUI.indentLevel=0;
+            EditorGUI.indentLevel--;
             
             EditorGUILayout.LabelField("Defense", EditorStyles.miniLabel);
             EditorGUI.indentLevel++;

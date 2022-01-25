@@ -19,6 +19,7 @@ namespace Project.Utility
         public static List<Area> FindPath(
             Area start, 
             Area goal,
+            bool ignoreWeights = false,
             AreaGroup areas = null,
             int maxCheckDistance = 2, 
             Dictionary<Area, float> distance = null,
@@ -79,7 +80,7 @@ namespace Project.Utility
                     {
                         continue;
                     }
-                    var alt = distance[area.Item2] + x.Weight();
+                    var alt = ignoreWeights? distance[area.Item2] + 1f : distance[area.Item2] + x.Weight();
                     if (alt < distance[x])
                     {
                         distance[x] = alt;
@@ -100,7 +101,7 @@ namespace Project.Utility
                 else
                 {
                     maxCheckDistance *= 2;
-                    Path = FindPath(start, goal, areas, maxCheckDistance,distance,previous,unvisited);
+                    Path = FindPath(start, goal, ignoreWeights, areas, maxCheckDistance,distance,previous,unvisited);
                     stopTime = UnityEngine.Time.realtimeSinceStartup;
                     spentTime += stopTime - startTime;
                     return Path;
