@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<UnitTemplate>
+  <Icon />
+  <Enchancement>False</Enchancement>
+  <Attack>
+    <Piercing>0</Piercing>
+    <Breakthrough>0</Breakthrough>
+    <Terror>0</Terror>
+    <ManpowerAttackBonus>0</ManpowerAttackBonus>
+    <CohesionAttackBonus>0</CohesionAttackBonus>
+    <ManpowerAttackDices>
+      <Dice>D6</Dice>
+    </ManpowerAttackDices>
+    <CohesionAttackDices>
+      <Dice>D6</Dice>
+    </CohesionAttackDices>
+  </Attack>
+  <Defense>
+    <Armor>0</Armor>
+    <MaxEntrenchment>6</MaxEntrenchment>
+    <Morale>0</Morale>
+  </Defense>
+  <Speed>0,25</Speed>
+  <IgnoreTerrain>False</IgnoreTerrain>
+  <MaxManpower>100</MaxManpower>
+  <MaxCohesion>100</MaxCohesion>
+</UnitTemplate>

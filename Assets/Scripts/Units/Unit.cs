@@ -105,12 +105,14 @@ namespace Project.Units
 
         public AttackInfo Attack(Unit target)
         {
-            var attackInfo = new AttackInfo();
-            attackInfo.Piercing = Template.Attack.Piercing;
-            attackInfo.Breakthrough = Template.Attack.Breakthrough;
-            attackInfo.Terror = Template.Attack.Terror;
-            attackInfo.ManpowerAttack = Template.Attack.ManpowerAttackBonus;
-            attackInfo.CohesionAttack = Template.Attack.CohesionAttackBonus;
+            var attackInfo = new AttackInfo
+            {
+                Piercing = Template.Attack.Piercing,
+                Breakthrough = Template.Attack.Breakthrough,
+                Terror = Template.Attack.Terror,
+                ManpowerAttack = Template.Attack.ManpowerAttackBonus,
+                CohesionAttack = Template.Attack.CohesionAttackBonus
+            };
             foreach (var enchancement in Enchancements)
             {
                 attackInfo.Piercing += enchancement.Attack.Piercing;
@@ -235,6 +237,7 @@ namespace Project.Units
             path = Utility.Pathfinder.FindPath(location,target, Template.IgnoreTerrain);
             if (path!=null)
             {
+                remainingTravelToNextArea = Template.IgnoreTerrain ? 1 : path[0].Weight();
                 //uiElement.PathSuccess(path);
                 UpdatePosition(false);
                 foreach (var animator in animators)
@@ -272,7 +275,10 @@ namespace Project.Units
             {
                 return;
             }
-            remainingTravelToNextArea -= Speed();
+            if (path != null)
+            {
+                remainingTravelToNextArea -= Speed();
+            }
             while (remainingTravelToNextArea <= 0)
             {
                 if (path== null)

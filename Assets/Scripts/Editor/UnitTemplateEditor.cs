@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +18,15 @@ namespace Project.Units
 
         void OnEnable()
         {
-
         }
 
         public override void OnInspectorGUI()
         {
+            serializedObject.Update();
             UnitTemplate unitTemplate = (UnitTemplate)target;
+            unitTemplate.LoadFromXml();
+
+            unitTemplate.Icon = (Sprite)EditorGUILayout.ObjectField("Icon",unitTemplate.Icon,typeof(Sprite));
 
             EditorGUILayout.HelpBox("Checks if it's standalone unit or enchancement to other units.", MessageType.None);
             unitTemplate.Enchancement = EditorGUILayout.Toggle("Enchancement", unitTemplate.Enchancement);
@@ -47,6 +51,11 @@ namespace Project.Units
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Manpower Attack Dices");
+            manpowerDices = new List<Dices.EDice>();
+            foreach (var dice in unitTemplate.Attack.ManpowerAttackDices)
+            {
+                manpowerDices.Add(dice.ToEnum());
+            }
             if (GUILayout.Button("-") && manpowerDices.Count > 0)
             {
                 manpowerDices.RemoveAt(manpowerDices.Count - 1);
@@ -61,10 +70,10 @@ namespace Project.Units
             {
                 manpowerDices[i] = (Dices.EDice)EditorGUILayout.EnumPopup(manpowerDices[i]);
             }
-            unitTemplate.Attack.ManpowerAttackDices = new Dices.IDice[manpowerDices.Count];
+            unitTemplate.Attack.ManpowerAttackDices = new List<Dices.Dice>();
             for (int i=0;i< manpowerDices.Count;i++)
             {
-                unitTemplate.Attack.ManpowerAttackDices[i] = diceFactory.Create(manpowerDices[i]);
+                unitTemplate.Attack.ManpowerAttackDices.Add(diceFactory.Create(manpowerDices[i]));
             }
             EditorGUILayout.HelpBox("Base bonus to attacks against enemy manpower.", MessageType.None);
             unitTemplate.Attack.ManpowerAttackBonus = EditorGUILayout.IntSlider("Manpower Attack Bonus", unitTemplate.Attack.ManpowerAttackBonus, 0, 20);
@@ -76,6 +85,11 @@ namespace Project.Units
 
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cohesion Attack Dices");
+            cohesionDices = new List<Dices.EDice>();
+            foreach (var dice in unitTemplate.Attack.CohesionAttackDices)
+            {
+                cohesionDices.Add(dice.ToEnum());
+            }
             if (GUILayout.Button("-") && cohesionDices.Count > 0)
             {
                 cohesionDices.RemoveAt(cohesionDices.Count - 1);
@@ -90,10 +104,10 @@ namespace Project.Units
             {
                 cohesionDices[i] = (Dices.EDice)EditorGUILayout.EnumPopup(cohesionDices[i]);
             }
-            unitTemplate.Attack.CohesionAttackDices = new Dices.IDice[cohesionDices.Count];
+            unitTemplate.Attack.CohesionAttackDices = new List<Dices.Dice>();
             for (int i = 0; i < cohesionDices.Count; i++)
             {
-                unitTemplate.Attack.CohesionAttackDices[i] = diceFactory.Create(cohesionDices[i]);
+                unitTemplate.Attack.CohesionAttackDices.Add(diceFactory.Create(cohesionDices[i]));
             }
             EditorGUILayout.HelpBox("Base bonus to attacks against enemy cohesion.", MessageType.None);
             unitTemplate.Attack.CohesionAttackBonus = EditorGUILayout.IntSlider("Cohesion Atack Bonus", unitTemplate.Attack.CohesionAttackBonus, 0, 20);
@@ -110,6 +124,10 @@ namespace Project.Units
             EditorGUILayout.HelpBox("Morale is a defense against attacks targeting cohesion.", MessageType.None);
             unitTemplate.Defense.Morale = EditorGUILayout.IntSlider("Morale", unitTemplate.Defense.Morale, 0, 20);
             EditorGUI.indentLevel = 0;
+
+            unitTemplate.SaveAsXml();
+            serializedObject.ApplyModifiedProperties();
+            EditorApplication.update.Invoke();
         }
     }
 }

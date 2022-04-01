@@ -12,8 +12,10 @@ namespace Project.Globe
 
         public void Start()
         {
-            Heightmap = new RenderTexture(4096, 2096, 24);
-            Heightmap.enableRandomWrite = true;
+            Heightmap = new RenderTexture(4096, 2096, 24)
+            {
+                enableRandomWrite = true
+            };
             Heightmap.Create();
 
             HeightmapGenerator.SetTexture(0, "Result", Heightmap);

@@ -52,8 +52,10 @@ namespace Project.Map
                 combine[i].mesh = allRoads[i].spline.GetComponent<MeshFilter>().mesh;
                 combine[i].transform = allRoads[i].spline.transform.localToWorldMatrix;
             }
-            mf.mesh = new Mesh();
-            mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mf.mesh = new Mesh
+            {
+                indexFormat = UnityEngine.Rendering.IndexFormat.UInt32
+            };
             mf.mesh.CombineMeshes(combine);
             foreach (var road in allRoads)
             {

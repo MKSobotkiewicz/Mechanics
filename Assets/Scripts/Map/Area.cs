@@ -13,7 +13,6 @@ namespace Project.Map
         public Color WaterTilesColor;
         public Color MountainTilesColor;
         public Color PlainsTilesColor;
-        //public UI.CityView CityView;
         public Vector3 Position;
         public River River;
         public float Humidity;
@@ -29,11 +28,12 @@ namespace Project.Map
         private UI.Area areaUi;
         private int[] globeVertices;
         private Mesh globeMesh;
+        private Mesh waterMesh;
         private Mesh landformMesh;
         private Time.Time time;
         private UI.ResourceIconGroup ResourceIconGroup;
         private Player.Player player;
-        private Canvas canvas;
+        private readonly Canvas canvas;
 
         private static Area clicked;
         private static Area unclicked;
@@ -231,6 +231,11 @@ namespace Project.Map
             globeMesh = mesh;
         }
 
+        public void SetWaterMesh(Mesh mesh)
+        {
+            waterMesh = mesh;
+        }
+
         public void SetLandformMesh(Mesh mesh)
         {
             landformMesh = mesh;
@@ -275,30 +280,6 @@ namespace Project.Map
             }
             return float.MaxValue;
         }
-
-        /*public List<Tuple<Area, float>> GetNeighboursWithDistance()
-        {
-            var neighboursWithDistance = new List<Tuple<Area, float>>();
-            foreach (var neighbour in Neighbours)
-            {
-                if (neighbour.Road)
-                {
-                    neighboursWithDistance.Add(new Tuple<Area, float>(neighbour, 0.5f));
-                    continue;
-                }
-                if (neighbour.Type == EType.Plains)
-                {
-                    neighboursWithDistance.Add(new Tuple<Area, float>(neighbour, 1));
-                    continue;
-                }
-                if (neighbour.Type == EType.Hills)
-                {
-                    neighboursWithDistance.Add(new Tuple<Area, float>(neighbour, 2));
-                    continue;
-                }
-            }
-            return neighboursWithDistance;
-        }*/
 
         public float Distance(Area area)
         {
@@ -437,10 +418,18 @@ namespace Project.Map
             var mesh = GetComponentInChildren<MeshFilter>().mesh;
             if (points.Count > 5)
             {
-                mesh.triangles = new int[] { 0, 1, 2, 5, 0, 2, 5, 2, 3, 3, 4, 5,
-                                             2, 1, 0, 2, 0, 5, 3, 2, 5, 5, 4, 3};
+                if (new Math.Matrix3x3(points[0]- transform.position, points[2]- transform.position, points[4]- transform.position).Determinant() < 0)
+                {
+                    mesh.triangles = new int[] { 0, 1, 2, 5, 0, 2, 5, 2, 3, 3, 4, 5 };
+                }
+                else
+                {
+                    mesh.triangles = new int[] { 2, 1, 0, 2, 0, 5, 3, 2, 5, 5, 4, 3 };
+                }
+               /* mesh.triangles = new int[] { 0, 1, 2, 5, 0, 2, 5, 2, 3, 3, 4, 5,
+                                             2, 1, 0, 2, 0, 5, 3, 2, 5, 5, 4, 3};*/
                 mesh.SetVertices(points);
-                mesh.SetUVs(0,new List<Vector2> {new Vector2(0.067f,0.25f),
+                mesh.SetUVs(0, new List<Vector2> {new Vector2(0.067f,0.25f),
                                                  new Vector2(0.067f, 0.75f),
                                                  new Vector2(0.5f, 1f),
                                                  new Vector2(0.933f,0.75f),
@@ -453,8 +442,14 @@ namespace Project.Map
             }
             else if (points.Count > 4)
             {
-                mesh.triangles = new int[] { 0, 1, 2, 4, 0, 2, 4, 2, 3,
-                                             2, 1, 0, 2, 0, 4, 3, 2, 4};
+                if (new Math.Matrix3x3(points[0] - transform.position, points[2] - transform.position, points[4] - transform.position).Determinant() < 0)
+                {
+                    mesh.triangles = new int[] { 0, 1, 2, 5, 0, 2, 5, 2, 3};
+                }
+                else
+                {
+                    mesh.triangles = new int[] { 2, 1, 0, 2, 0, 4, 3, 2, 4};
+                }
                 mesh.SetVertices(points);
                 mesh.RecalculateNormals();
                 mesh.RecalculateTangents();
@@ -524,8 +519,10 @@ namespace Project.Map
                 combine[i].mesh = areas[i].GetComponentInChildren<MeshFilter>().mesh;
                 combine[i].transform = areas[i].transform.localToWorldMatrix;
             }
-            mf.mesh = new Mesh();
-            mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mf.mesh = new Mesh
+            {
+                indexFormat = UnityEngine.Rendering.IndexFormat.UInt32
+            };
             mf.mesh.CombineMeshes(combine);
             mf.mesh.RecalculateBounds();
             mf.mesh.RecalculateTangents();

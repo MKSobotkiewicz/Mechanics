@@ -1,5 +1,6 @@
 #pragma kernel CSMain
 
+RWStructuredBuffer<int> Triangles;
 RWStructuredBuffer<float3> Vertices;
 RWStructuredBuffer<float4> Colors;
 
@@ -184,6 +185,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 	spherical.z -= warpNoise4;
 	vertice = toCartesian(spherical.x, spherical.y, spherical.z);
 	vertice = CheckForNaNs(vertice);
+
 	Vertices[id.x] = vertice;
 	Colors[id.x] = color;
 }

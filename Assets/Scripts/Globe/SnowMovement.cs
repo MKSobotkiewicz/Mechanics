@@ -37,7 +37,7 @@ namespace Project.Globe
             Value = -angle / 15;
             foreach (var material in materials)
             {
-                material.SetFloat("Vector1_c1314484067849e9a0897c8e6b791b8b", Value);
+                material.SetFloat("_SnowMove", Value);
             }
         }
     }

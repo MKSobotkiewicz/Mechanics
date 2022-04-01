@@ -73,8 +73,10 @@ namespace Project.Map
                 combine[i].mesh= allRivers[i].spline.GetComponent<MeshFilter>().mesh;
                 combine[i].transform = allRivers[i].spline.transform.localToWorldMatrix;
             }
-            mf.mesh = new Mesh();
-            mf.mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mf.mesh = new Mesh
+            {
+                indexFormat = UnityEngine.Rendering.IndexFormat.UInt32
+            };
             mf.mesh.CombineMeshes(combine);
             foreach (var river in allRivers)
             {

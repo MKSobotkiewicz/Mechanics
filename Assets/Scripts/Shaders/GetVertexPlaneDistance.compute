@@ -1,0 +1,120 @@
+#pragma kernel CSMain
+
+#define MAX_NEIGHBOUR_COUNT 6
+
+RWStructuredBuffer<int> VerticesId;
+RWStructuredBuffer<float3> Vertices;
+RWStructuredBuffer<int> Triangles;
+RWStructuredBuffer<float> Distances;
+RWStructuredBuffer<int> Neighbours;
+
+float DotProduct(float3 vector1, float3 vector2) 
+{
+	return vector1.x * vector2.x + vector1.y * vector2.y + vector1.z * vector2.z;
+}
+
+float Magnitude(float3 vector1)
+{
+	return sqrt(vector1.x*vector1.x+ vector1.y*vector1.y+ vector1.z*vector1.z);
+}
+
+bool Contains(int array[MAX_NEIGHBOUR_COUNT],int value)
+{
+	for (int i = 0; i < array.Length; i++) 
+	{
+		if (array[i] == value) 
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	int neighbours[MAX_NEIGHBOUR_COUNT];
+	for (int i = 0; i < MAX_NEIGHBOUR_COUNT; i++) 
+	{
+		neighbours[i] = -1;
+	}
+	int numberOfNeighbours=0;
+	for (int i = 0; i < Triangles.Length-2; i += 3)
+	{
+		if (Triangles[i] == VerticesId[id.x]) 
+		{
+			if (!Contains(neighbours, Triangles[i + 1]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i + 1];
+				numberOfNeighbours ++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+			if (!Contains(neighbours, Triangles[i + 2]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i + 2];
+				numberOfNeighbours ++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+		}
+		else if (Triangles[i + 1] == VerticesId[id.x]) 
+		{
+			if (!Contains(neighbours, Triangles[i]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+			if (!Contains(neighbours, Triangles[i + 2]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i + 2];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+		}
+		else if (Triangles[i + 2] == VerticesId[id.x])
+		{
+			if (!Contains(neighbours, Triangles[i + 1]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i + 1];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+			if (!Contains(neighbours, Triangles[i]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+		}
+		float3 planeNormal;
+		for (int i = 0; i < numberOfNeighbours; i ++)
+		{
+			planeNormal += Vertices[neighbours[i]];
+		}
+		planeNormal /= numberOfNeighbours;
+		float3 projectedVertice = planeNormal * (DotProduct(Vertices[VerticesId[id.x]], planeNormal) / DotProduct(planeNormal, planeNormal));
+		Distances[id.x] = Magnitude(projectedVertice - planeNormal);
+		for (int i = 0; i < numberOfNeighbours; i++)
+		{
+			Neighbours[id.x * MAX_NEIGHBOUR_COUNT + i] = neighbours[i];
+		}
+	}
+}

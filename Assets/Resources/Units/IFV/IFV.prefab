@@ -1030,10 +1030,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UnitPath: {fileID: 8252490367791166968}
-  speed: 0.3
   Icon: {fileID: 695503812, guid: 1723538aec4a4bc45a2ade3a082e4e14, type: 3}
-  MaxManpower: 100
-  MaxCohesion: 100
+  Template: {fileID: 8444809623766591270, guid: 28ec0628bcd0cd14590b2511f7e3fc84, type: 3}
+  Enchancements: []
 --- !u!1 &8023652987864616908
 GameObject:
   m_ObjectHideFlags: 0

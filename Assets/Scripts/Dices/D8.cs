@@ -6,13 +6,18 @@ using System.Threading.Tasks;
 
 namespace Project.Dices
 {
-    public class D8 : IDice
+    public class D8 : Dice
     {
         private static readonly Random random = new Random();
 
-        public int Roll()
+        public override int Roll()
         {
             return random.Next(1, 9);
+        }
+
+        public override EDice ToEnum()
+        {
+            return EDice.D8;
         }
     }
 }

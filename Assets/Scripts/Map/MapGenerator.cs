@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,7 +22,8 @@ namespace Project.Map
         public ResourcesSpreader ResourcesSpreader;
         public List<River> Rivers { get; private set; } = new List<River>();
         public MapData MapData { get; private set; } = new MapData();
-        public MeshFilter MeshFilter;
+        public MeshFilter GlobeMeshFilter;
+        public MeshFilter WaterMeshFilter;
         public Globe.SnowMovement SnowMovement;
         public UnityEngine.Material RiverMaterial;
         public UnityEngine.Material RoadMaterial;
@@ -111,16 +113,15 @@ namespace Project.Map
                     GenerationSteps.GeneratingRoadsStep(this);
                     break;
                 case 14:
+                    //GenerationSteps.OptimizingGlobeMeshStep(this);
+                    break;
+                case 15:
                     GenerationSteps.FinalizeStep(this);
                     break;
                 default:
                     Debug.LogError(name+" wrong index");
                     break;
             }
-            /*Debug.Log(name + " generating alien cities, time: " + UnityEngine.Time.realtimeSinceStartup);
-            var alienCities=AlienCitiesGenerator.Generate(MapData.PossibleAreas(),100);
-            Debug.Log(name + " generating organizations: " + UnityEngine.Time.realtimeSinceStartup);
-            var og = new Organizations.OrganizationsGenerator(MapData);*/
         }
 
         protected void CreateAreas()
@@ -137,11 +138,8 @@ namespace Project.Map
                 area.SetTime(Time);
                 area.transform.parent = transform;
                 area.transform.position = vertice * transform.localScale.x;
-                area.SetGlobeMesh(MeshFilter.mesh);
-
-                //var material = area.GetComponentInChildren<MeshRenderer>().material;
-                //material.renderQueue = 3000 + ((i + 1) % 100);
-
+                area.SetGlobeMesh(GlobeMeshFilter.mesh);
+                area.SetWaterMesh(WaterMeshFilter.mesh);
                 MapData.Areas.Add(area);
                 i++;
             }
@@ -189,7 +187,7 @@ namespace Project.Map
         {
             int idsPerArea = 20;
             var areas = MapData.Areas;
-            MapData.meshFilter = MeshFilter;
+            MapData.meshFilter = GlobeMeshFilter;
             Debug.Log("  setting positions, time: " + UnityEngine.Time.realtimeSinceStartup);
             var positions = new Vector3[areas.Count];
             for (int i = 0; i < areas.Count; i++)
@@ -197,9 +195,10 @@ namespace Project.Map
                 positions[i] = areas[i].transform.position;
             }
             var ids = new int[positions.Length* idsPerArea];
-            var vertices = MeshFilter.mesh.vertices;
+            var vertices = GlobeMeshFilter.mesh.vertices;
+            vertices = vertices.Concat(WaterMeshFilter.mesh.vertices).ToArray();
 
-            Matrix4x4 localToWorld = MeshFilter.transform.localToWorldMatrix;
+            Matrix4x4 localToWorld = GlobeMeshFilter.transform.localToWorldMatrix;
             for (int i = 0; i < vertices.Length; i++)
             {
                 vertices[i] = localToWorld.MultiplyPoint3x4(vertices[i]) * 0.99f;
@@ -221,16 +220,35 @@ namespace Project.Map
             positionBuffer.Release();
             idBuffer.Release();
             Debug.Log("  setting colors, time: " + UnityEngine.Time.realtimeSinceStartup);
-            var colors = MeshFilter.mesh.colors;
+            var colors = GlobeMeshFilter.mesh.colors;
             for (int i = 0; i < areas.Count; i++)
             {
-                areas[i].SetType(colors[ids[i* idsPerArea]],this);
+                if (ids.Length < i * idsPerArea)
+                {
+                    areas[i].SetType(new Color(0, 0, 1, 1), this);
+                }
+                else if (colors.Length < ids[i * idsPerArea])
+                {
+                    areas[i].SetType(new Color(0, 0, 1, 1), this);
+                }
+                else
+                {
+                    try
+                    {
+                        areas[i].SetType(colors[ids[i * idsPerArea]], this);
+                    }
+                    catch
+                    {
+                        areas[i].SetType(new Color(0, 0, 1, 1), this);
+                    }
+                }
                 var verticesIds=new int[idsPerArea];
                 Array.Copy(ids, i * idsPerArea, verticesIds,0, idsPerArea);
                 areas[i].SetGlobeVertices(verticesIds);
             }
             Debug.Log("  instantiating meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
-            vertices = MeshFilter.mesh.vertices;
+            vertices = GlobeMeshFilter.mesh.vertices;
+            vertices = vertices.Concat(WaterMeshFilter.mesh.vertices).ToArray();
             for (int i = 0; i < areas.Count; i++)
             {
                 var position = localToWorld.MultiplyPoint3x4(vertices[ids[i * idsPerArea]]);
@@ -249,7 +267,7 @@ namespace Project.Map
                             var mr = mountain.GetComponentInChildren<MeshRenderer>();
                             mr.transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
                             mr.material.SetColor(Globe.PlanetConditions.GlobeMaterialPlantColorName, PlanetConditions.PlantColor);
-                            mountain.transform.parent = MeshFilter.transform;
+                            mountain.transform.parent = GlobeMeshFilter.transform;
                             mountain.transform.localScale /= 3;
                             SnowMovement.AddMaterial(mr.material);
                             areas[i].SetLandformMesh(mountain.GetComponentInChildren<MeshFilter>().mesh);
@@ -266,7 +284,7 @@ namespace Project.Map
                             var mr = hill.GetComponentInChildren<MeshRenderer>();
                             mr.transform.localEulerAngles += new Vector3(0, 0, (float)random.NextDouble() * 360);
                             mr.material.SetColor(Globe.PlanetConditions.GlobeMaterialPlantColorName, PlanetConditions.PlantColor);
-                            hill.transform.parent = MeshFilter.transform;
+                            hill.transform.parent = GlobeMeshFilter.transform;
                             hill.transform.localScale /= 3;
                             SnowMovement.AddMaterial(mr.material);
                             areas[i].SetLandformMesh(hill.GetComponentInChildren<MeshFilter>().mesh);
@@ -276,6 +294,32 @@ namespace Project.Map
                         }
                 }
             }
+        }
+
+        protected void OptimizeGlobeMeshFilter()
+        {
+            var mesh = GlobeMeshFilter.mesh;
+            var triangles = mesh.triangles;
+            var colors = mesh.colors;
+            var trianglesT = new int[triangles.Length];
+            var trianglesTLength = 0;
+            for (int i = 0; i < triangles.Length; i += 3)
+            {
+                if (colors[triangles[i]].b == 0 || colors[triangles[i + 1]].b == 0 || colors[triangles[i + 2]].b == 0)
+                {
+                    trianglesT[trianglesTLength] = triangles[i];
+                    trianglesT[trianglesTLength + 1] = triangles[i + 1];
+                    trianglesT[trianglesTLength + 2] = triangles[i + 2];
+                    trianglesTLength += 3;
+                }
+            }
+
+            Array.Resize(ref trianglesT, trianglesTLength);
+
+            Debug.Log("triangles: " + trianglesTLength + " from " + triangles.Length + " : " + (float)trianglesTLength * 100 / (float)triangles.Length + "%");
+
+            mesh.SetTriangles(trianglesT, 0);
+            mesh.Optimize();
         }
 
         protected void AddForests()
@@ -293,6 +337,7 @@ namespace Project.Map
                 mat = ForestPrefab.GetComponentInChildren<MeshRenderer>().sharedMaterial;
             }
             mat.SetColor("Color_32ec741d9f04478a8f487932571920e6", PlanetConditions.PlantColor);
+            SnowMovement.AddMaterial(mat);
             var possibleAreas = MapData.PossibleAreas();
             foreach (var area in possibleAreas)
             {
@@ -357,7 +402,7 @@ namespace Project.Map
                 {
                     try
                     {
-                        Rivers.Add(new River(start, 500, MeshFilter.transform, RiverMaterial));
+                        Rivers.Add(new River(start, 500, GlobeMeshFilter.transform, RiverMaterial));
                     }
                     catch
                     {
@@ -377,15 +422,19 @@ namespace Project.Map
                     area.AddResourceGenerator(RiverGeneratorTypePrefab,1);
                 }
             }
-            var colors = MeshFilter.mesh.colors;
-            foreach (var vertice in vertices)
+            var colors = GlobeMeshFilter.mesh.colors;
+            for(int i=0;i< vertices.Count; i++)
             {
-                if (colors[vertice].b != 1)
+                if (colors.Length < vertices[i])
                 {
-                    colors[vertice] += color;
+                    continue;
+                }
+                if (colors[vertices[i]].b != 1)
+                {
+                    colors[vertices[i]] += color;
                 }
             }
-            MeshFilter.mesh.SetColors(colors);
+            GlobeMeshFilter.mesh.SetColors(colors);
 
             River.OptimizeAllRivers();
         }
@@ -494,8 +543,8 @@ namespace Project.Map
             public static void OptimizingAreasMeshesStep(MapGenerator mapGenerator)
             {
                 Debug.Log(mapGenerator.name + " optimizing areas meshes, time: " + UnityEngine.Time.realtimeSinceStartup);
-               // Area.OptimizeMeshes(mapGenerator.MapData.WaterAreas, "Water Areas");
-                //Area.OptimizeMeshes(mapGenerator.MapData.MountainAreas, "Mountain Areas");
+                Area.OptimizeMeshes(mapGenerator.MapData.WaterAreas, "Water Areas");
+                Area.OptimizeMeshes(mapGenerator.MapData.MountainAreas, "Mountain Areas");
                 mapGenerator.textConsole.PushBack("generating rivers...");
             }
 
@@ -531,7 +580,7 @@ namespace Project.Map
             public static void GeneratingCitiesStep(MapGenerator mapGenerator)
             {
                 Debug.Log(mapGenerator.name + " generating cities, time: " + UnityEngine.Time.realtimeSinceStartup);
-                mapGenerator.CitiesGenerator.Init(mapGenerator.MeshFilter, mapGenerator.MapData, mapGenerator.MainCanvas);
+                mapGenerator.CitiesGenerator.Init(mapGenerator.GlobeMeshFilter, mapGenerator.MapData, mapGenerator.MainCanvas);
                 mapGenerator.cities = mapGenerator.CitiesGenerator.Generate(mapGenerator.MapData.PlainsAreas);
                 mapGenerator.textConsole.PushBack("generating roads...");
             }
@@ -540,6 +589,13 @@ namespace Project.Map
             {
                 Debug.Log(mapGenerator.name + " generating roads, time: " + UnityEngine.Time.realtimeSinceStartup);
                 mapGenerator.GenerateRoads(mapGenerator.cities);
+                mapGenerator.textConsole.PushBack("optimizing globe mesh...");
+            }
+
+            public static void OptimizingGlobeMeshStep(MapGenerator mapGenerator)
+            {
+                Debug.Log(mapGenerator.name + " optimizing globe mesh, time: " + UnityEngine.Time.realtimeSinceStartup);
+                mapGenerator.OptimizeGlobeMeshFilter();
                 mapGenerator.textConsole.PushBack("finalizing...");
             }
 

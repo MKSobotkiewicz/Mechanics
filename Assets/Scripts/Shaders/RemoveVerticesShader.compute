@@ -1,0 +1,47 @@
+#pragma kernel CSMain
+
+#define MAX_NEIGHBOUR_COUNT 6
+
+RWStructuredBuffer<int> VerticesId;
+RWStructuredBuffer<float3> Vertices;
+RWStructuredBuffer<int> Triangles;
+RWStructuredBuffer<int> Neighbours;
+
+float Distance(float3 vector1, float3 vector2) 
+{
+	float3 dist = float3(vector1.x - vector2.x, vector1.y - vector2.y, vector1.z - vector2.z);
+	return sqrt(dist.x*dist.x + dist.y*dist.y + dist.z*dist.z);
+}
+
+[numthreads(64, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	float minDistance = 9999999;
+	int closestId = -1;
+	int thisId = VerticesId[id.x];
+	for (int i = 0; i < MAX_NEIGHBOUR_COUNT; i ++)
+	{
+		int nid = Neighbours[thisId * MAX_NEIGHBOUR_COUNT + i];
+		float3 vert = Vertices[nid];
+		if (vert.x !=0&& vert.y != 0&& vert.z != 0)
+		{
+			float dist = Distance(Vertices[nid], Vertices[thisId]);
+			if (dist < minDistance)
+			{
+				minDistance = dist;
+				closestId = nid;
+			}
+		}
+	}
+	if (closestId != -1) 
+	{
+		Vertices[thisId] = (0, 0, 0);
+		for (int i = 0; i < Triangles.Length; i++)
+		{
+			if (Triangles[i] == thisId)
+			{
+				Triangles[i] = closestId;
+			}
+		}
+	}
+}
