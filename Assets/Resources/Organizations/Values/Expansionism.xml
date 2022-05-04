@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Value>
+  <Name>
+    Expansionism
+  </Name>
+  <Adjective>
+    Expanding
+  </Adjective>
+  <Description>
+
+  </Description>
+  <Compatible>
+    <Value>Militarism</Value>
+  </Compatible>
+  <Contradictory>
+  </Contradictory>
+</Value>

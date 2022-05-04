@@ -1,0 +1,109 @@
+#pragma kernel CSMain
+#define MAX_NEIGHBOUR_COUNT 6
+
+RWStructuredBuffer<int> Triangles;
+RWStructuredBuffer<float3> Vertices;
+RWStructuredBuffer<float4> Colors;
+
+bool Contains(int array[MAX_NEIGHBOUR_COUNT], int value)
+{
+	for (int i = 0; i < array.Length; i++)
+	{
+		if (array[i] == value)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+[numthreads(64, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	float3 vertice = Vertices[id.x];
+	int neighbours[MAX_NEIGHBOUR_COUNT];
+	for (int i = 0; i < MAX_NEIGHBOUR_COUNT; i++)
+	{
+		neighbours[i] = -1;
+	}
+	int numberOfNeighbours = 0;
+	for (int i = 0; i < Triangles.Length; i += 3)
+	{
+		if (Triangles[i] == id.x)
+		{
+			if (!Contains(neighbours, Triangles[i + 1]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i + 1];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+			if (!Contains(neighbours, Triangles[i + 2]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i + 2];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+		}
+		else if (Triangles[i + 1] == id.x)
+		{
+			if (!Contains(neighbours, Triangles[i]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+			if (!Contains(neighbours, Triangles[i + 2]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i + 2];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+		}
+		else if (Triangles[i + 2] == id.x)
+		{
+			if (!Contains(neighbours, Triangles[i + 1]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i + 1];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+			if (!Contains(neighbours, Triangles[i]))
+			{
+				neighbours[numberOfNeighbours] = Triangles[i];
+				numberOfNeighbours++;
+				if (numberOfNeighbours == MAX_NEIGHBOUR_COUNT)
+				{
+					break;
+				}
+			}
+		}
+	}
+	for (int i = 0; i < numberOfNeighbours; i++)
+	{
+		if (Colors[neighbours[i]].b != 1)
+		{
+			break;
+		};
+		if (i == numberOfNeighbours - 1)
+		{
+			vertice = (0, 0, 0);
+		}
+	}
+
+	Vertices[id.x] = vertice;
+}

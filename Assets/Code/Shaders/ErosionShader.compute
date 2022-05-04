@@ -1,0 +1,64 @@
+#pragma kernel CSMain
+
+#define EROSION_AMOUNT 0.0001
+#define MAX_PATH_LENGTH 16
+#define MAX_NEIGHBOUR_COUNT 6
+
+RWStructuredBuffer<float3> Vertices;
+StructuredBuffer<int> Neighbours;
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	int pointId = id.x;
+	for (int n = 0; n < 10; n++)
+	{
+		int path[MAX_PATH_LENGTH];
+		int pathLength = 0;
+		for (int i = 0; i < MAX_PATH_LENGTH; i++)
+		{
+			path[i] = -1;
+		}
+		for (int i = 0; i < MAX_PATH_LENGTH; i++)
+		{
+			float pointMagnitude = length(Vertices[pointId]);
+			float lowestNeighbourMagnitude = pointMagnitude;
+			int lowestNeighbourId = -1;
+			for (int j = 0; j < MAX_NEIGHBOUR_COUNT; j++)
+			{
+				int currentNeighbourId = Neighbours[pointId*MAX_NEIGHBOUR_COUNT + j];
+				if (Neighbours.Length < pointId*MAX_NEIGHBOUR_COUNT + j)
+				{
+					Vertices[pointId] = (0, 0, 0);
+				}
+				if (currentNeighbourId == -1)
+				{
+					break;
+				}
+				float currentNeighbourMagnitude = length(Vertices[currentNeighbourId]);
+				if (!isnan(currentNeighbourMagnitude))
+				{
+					if (currentNeighbourMagnitude < lowestNeighbourMagnitude)
+					{
+						lowestNeighbourMagnitude = currentNeighbourMagnitude;
+						lowestNeighbourId = currentNeighbourId;
+					}
+				}
+			}
+			if (lowestNeighbourMagnitude < pointMagnitude)
+			{
+				path[i] = pointId;
+				pointId = lowestNeighbourId;
+				pathLength++;
+			}
+			else
+			{
+				break;
+			}
+		}
+		for (int i = 0; i < pathLength; i++)
+		{
+			Vertices[path[i]] *= 1 - EROSION_AMOUNT;
+		}
+	}
+}

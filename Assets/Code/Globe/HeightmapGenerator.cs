@@ -16,9 +16,12 @@ namespace Project.Globe
         public float X = 1;
         public ComputeShader HeightmapComputeShader;
         public ComputeShader RemoveWaterComputeShader;
+        public ComputeShader ErosionComputeShader;
+        public ComputeShader GetNeighboursComputeShader;
         public Utility.MeshSimplificator MeshSimplificator;
 
         private MeshFilter meshFilter;
+        private const int MAX_NEIGHBOUR_COUNT = 6;
 
         private static readonly System.Random random = new System.Random();
 
@@ -30,17 +33,20 @@ namespace Project.Globe
                 Debug.LogError(name+ " missing MeshFilter.");
             }
             var mesh = meshFilter.mesh;
+            //mesh.Optimize();
             var vertices = mesh.vertices;
             var triangles = mesh.triangles;
             var colors = new Color[vertices.Length];
-            var verticesBuffer = new ComputeBuffer(vertices.Length, sizeof(float)*3);
+            var neighbours = new int[vertices.Length* MAX_NEIGHBOUR_COUNT];
+            var verticesBuffer = new ComputeBuffer(vertices.Length, sizeof(float) * 3);
             var colorsBuffer = new ComputeBuffer(colors.Length, sizeof(float) * 4);
             var trianglesBuffer = new ComputeBuffer(triangles.Length, sizeof(int));
+            var neighboursBuffer = new ComputeBuffer(vertices.Length * MAX_NEIGHBOUR_COUNT, sizeof(int));
             trianglesBuffer.SetData(triangles);
             verticesBuffer.SetData(vertices);
             colorsBuffer.SetData(colors);
 
-            var dataSize = vertices.Length/64+1;
+            var dataSize = vertices.Length/64;
 
             HeightmapComputeShader.SetBuffer(0, "Triangles", trianglesBuffer);
             HeightmapComputeShader.SetBuffer(0,"Vertices", verticesBuffer);
@@ -48,6 +54,14 @@ namespace Project.Globe
             HeightmapComputeShader.SetFloat("Seed", (float)random.NextDouble());
             HeightmapComputeShader.Dispatch(0, dataSize, 1, 1);
 
+            GetNeighboursComputeShader.SetBuffer(0, "Triangles", trianglesBuffer);
+            GetNeighboursComputeShader.SetBuffer(0, "Neighbours", neighboursBuffer);
+            GetNeighboursComputeShader.Dispatch(0, dataSize, 1, 1);
+            
+            ErosionComputeShader.SetBuffer(0, "Neighbours", neighboursBuffer);
+            ErosionComputeShader.SetBuffer(0, "Vertices", verticesBuffer);
+            ErosionComputeShader.Dispatch(0, dataSize, 1, 1);
+            
             RemoveWaterComputeShader.SetBuffer(0, "Triangles", trianglesBuffer);
             RemoveWaterComputeShader.SetBuffer(0, "Vertices", verticesBuffer);
             RemoveWaterComputeShader.SetBuffer(0, "Colors", colorsBuffer);
@@ -56,10 +70,12 @@ namespace Project.Globe
             trianglesBuffer.GetData(triangles);
             verticesBuffer.GetData(vertices);
             colorsBuffer.GetData(colors);
+
             trianglesBuffer.Release();
             verticesBuffer.Release();
             colorsBuffer.Release();
-            
+            neighboursBuffer.Release();
+
             var trianglesT = new int[triangles.Length];
             var trianglesTLength = 0;
             for (int i = 0; i < triangles.Length; i += 3)
@@ -82,11 +98,14 @@ namespace Project.Globe
             mesh.SetColors(colors);
             mesh.Optimize();
 
-            //MeshSimplificator.Simplify(meshFilter.mesh); doesn't work lol
-            //mesh.Optimize();
+            var verticesT = mesh.vertices;
+
+            Debug.Log("vertices: " + verticesT.Length + " from " + vertices.Length + " : " + (float)verticesT.Length * 100 / (float)vertices.Length + "%");
+
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
+
             meshFilter.mesh = mesh;
             var collider = GetComponent<MeshCollider>();
             if (collider != null)

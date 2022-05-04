@@ -131,7 +131,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 	float3 initialPos = vertice;
 	float waterNoise = StepSample(vertice+ float3(10000 * Seed, 10000 * Seed, 10000 * Seed), 5, 0.3)*0.01 + 0.957;
 	float noise= StepSample(vertice + float3(3000 * Seed, 3000 * Seed, 3000 * Seed),5,1)*0.1;
-	noise = (noise* noise*noise)*0.02 + 1.005;
+	noise = (noise* noise*noise)*0.05 + 1.01;
 	float totalNoise = noise * waterNoise;
 	vertice *= sqrt(totalNoise);
 
@@ -174,10 +174,10 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 		color.a += 0.5;
 	}*/
 
-	float warpNoise1 = StepSample(vertice + float3(8000 * Seed, 8000 * Seed, 8000 * Seed), 5, 2)*0.003;
-	float warpNoise2 = StepSample(vertice + float3(9000 * Seed, 9000 * Seed, 9000 * Seed), 5, 2)*0.003;
-	float warpNoise3 = StepSample(vertice + float3(11000 * Seed, 10000 * Seed, 10000 * Seed), 5, 2)*0.003;
-	float warpNoise4 = StepSample(vertice + float3(11000 * Seed, 11000 * Seed, 11000 * Seed), 5, 2)*0.003;
+	float warpNoise1 = StepSample(vertice + float3(8000 * Seed, 8000 * Seed, 8000 * Seed), 5, 2)*0.002;
+	float warpNoise2 = StepSample(vertice + float3(9000 * Seed, 9000 * Seed, 9000 * Seed), 5, 2)*0.002;
+	float warpNoise3 = StepSample(vertice + float3(11000 * Seed, 10000 * Seed, 10000 * Seed), 5, 2)*0.002;
+	float warpNoise4 = StepSample(vertice + float3(11000 * Seed, 11000 * Seed, 11000 * Seed), 5, 2)*0.002;
 	float3 spherical = toSpherical(vertice);
 	spherical.y += warpNoise1;
 	spherical.z += warpNoise2;

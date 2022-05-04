@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Value>
+  <Name>
+    Conservatism
+  </Name>
+  <Adjective>
+    Conservative
+  </Adjective>
+  <Description>
+
+  </Description>
+  <Compatible>
+    <Value>Nationalism</Value>
+    <Value>Spiritualism</Value>
+  </Compatible>
+  <Contradictory>
+    <Value>Progressivism</Value>
+    <Value>Materialism</Value>
+  </Contradictory>
+</Value>
