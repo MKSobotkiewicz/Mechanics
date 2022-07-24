@@ -12,7 +12,7 @@ namespace Project.Utility
 
         public static type GetRandomObject<type>(List<type> list)
         {
-            return list[random.Next(list.Count-1)];
+            return list[random.Next(list.Count)];
         }
     }
 }

@@ -7,54 +7,63 @@ using UnityEngine;
 
 namespace Project.Units
 {
-    public class Unit : MonoBehaviour, IMovable, Utility.IClicable, UI.IFollowed,Time.IDaily
+    public class Unit : MonoBehaviour, IMovable, Utility.IClicable, UI.IFollowed, Time.IDaily
     {
         public bool Selected { get; private set; } = false;
         public int CurrentEntrenchment { get; private set; }
         public int MaxEntrenchment { get; private set; }
-        public uint MaxManpower { get; private set; }
-        public uint MaxCohesion { get; private set; }
+        public int MaxManpower { get; private set; }
+        public int MaxCohesion { get; private set; }
+        public int MaxSupply { get; private set; }
         public UnitPath UnitPath;
-        public Sprite Icon;
+        public UI.Unit UnitUiPrefab;
+        public UI.UnitAttack UnitAttackPrefab;
         public UnitTemplate Template;
-        public List<UnitTemplate> Enchancements=new List<UnitTemplate>();
+        public List<UnitTemplate> Enchancements = new List<UnitTemplate>();
 
         private Transform unitPaths;
-        private UI.Unit uiElement;
-        private UI.UnitBar unitBar;
+        private UI.Unit unitUi;
+        //private UI.UnitBar unitBar;
         private Player.Player player;
         private Organizations.Organization organization;
         private Map.Area location;
         private List<Map.Area> path;
         private float remainingTravelToNextArea;
-        private List<Animator> animators=new List<Animator>();
+        private List<Animator> animators = new List<Animator>();
         private LayerMask layerMask;
         private GameObject soldiers;
-        private uint manpower;
-        private uint cohesion;
+        private UI.UnitAttack unitAttack;
+        public int Manpower;
+        public int Cohesion;
+        public int Supply;
 
         public static HashSet<Unit> AllUnits { get; private set; } = new HashSet<Unit>();
 
-        public void Init(Map.Area _location, Player.Player _player, Organizations.Organization _organization, Transform _unitPaths,Time.Time time)
-        { 
+        public void Init(Map.Area _location, Player.Player _player, Organizations.Organization _organization, Transform _unitPaths, Time.Time time)
+        {
+            unitUi = Instantiate(UnitUiPrefab, UnityEngine.Camera.main.GetComponentInChildren<Canvas>().transform);
+            unitUi.RectTransform.localScale = new Vector3(1, 1, 1);
             animators = GetComponentsInChildren<Animator>().ToList();
             time.AddHourly(this);
             time.AddDaily(this);
-            unitPaths =_unitPaths;
+            unitPaths = _unitPaths;
             player = _player;
             location = _location;
             organization = _organization;
-            manpower = Template.MaxManpower;
-            cohesion = Template.MaxCohesion;
             MaxEntrenchment = Template.Defense.MaxEntrenchment;
             MaxManpower = Template.MaxManpower;
             MaxCohesion = Template.MaxCohesion;
+            MaxSupply = Template.MaxSupply;
             foreach (var enchancement in Enchancements)
             {
                 MaxEntrenchment += enchancement.Defense.MaxEntrenchment;
                 MaxManpower += enchancement.MaxManpower;
                 MaxCohesion += enchancement.MaxCohesion;
+                MaxSupply += enchancement.MaxSupply;
             }
+            Manpower = MaxManpower;
+            Cohesion = MaxCohesion;
+            Supply = MaxSupply;
             UpdatePosition(true);
             AllUnits.Add(this);
             transform.LookAt(location.Neighbours[0].Position, transform.position.normalized);
@@ -63,7 +72,7 @@ namespace Project.Units
             {
                 animator.SetBool("Moving", false);
             }
-            layerMask = ~LayerMask.GetMask("Unit","Outlined");
+            layerMask = ~LayerMask.GetMask("Unit", "Outlined");
             var soldiersLM = LayerMask.NameToLayer("Soldiers");
             foreach (var tr in transform.GetComponentsInChildren<Transform>())
             {
@@ -73,6 +82,8 @@ namespace Project.Units
                     break;
                 }
             }
+            location.Units.Add(this);
+            unitUi.Init(this);
         }
 
         public string Name()
@@ -103,10 +114,40 @@ namespace Project.Units
         {
         }
 
+        public float GetManpowerRatio()
+        {
+            return (float)Manpower / (float)MaxManpower;
+        }
+
+        public float GetCohesionRatio()
+        {
+            return (float)Cohesion / (float)MaxCohesion;
+        }
+
+        public float GetSupplyRatio()
+        {
+            return (float)Supply / (float)MaxSupply;
+        }
+
         public AttackInfo Attack(Unit target)
         {
+            if (Supply < Template.Attack.SupplyCost)
+            {
+                return new AttackInfo
+                {
+                    EnoughSupplies = false,
+                    SupplyCost = Template.Attack.SupplyCost,
+                    Piercing = 0,
+                    Breakthrough = 0,
+                    Terror = 0,
+                    ManpowerAttack = 0,
+                    CohesionAttack = 0,
+                };
+            }
             var attackInfo = new AttackInfo
             {
+                EnoughSupplies = true,
+                SupplyCost = Template.Attack.SupplyCost,
                 Piercing = Template.Attack.Piercing,
                 Breakthrough = Template.Attack.Breakthrough,
                 Terror = Template.Attack.Terror,
@@ -147,7 +188,6 @@ namespace Project.Units
                 }
             }
             attackInfo.ManpowerAttack = attackInfo.ManpowerAttack < 0 ? 0 : attackInfo.ManpowerAttack;
-
             attackInfo.Steadfastness = attackInfo.Morale - attackInfo.Terror;
             attackInfo.Steadfastness = attackInfo.Steadfastness < 0 ? 0 : attackInfo.Steadfastness;
             attackInfo.CohesionAttack = attackInfo.CohesionAttack - attackInfo.Steadfastness;
@@ -163,8 +203,47 @@ namespace Project.Units
                 }
             }
             attackInfo.CohesionAttack = attackInfo.CohesionAttack < 0 ? 0 : attackInfo.CohesionAttack;
+            attackInfo.CohesionAttack = Mathf.RoundToInt((float)attackInfo.CohesionAttack * GetCohesionRatio() * GetManpowerRatio());
+            attackInfo.ManpowerAttack = Mathf.RoundToInt((float)attackInfo.ManpowerAttack * GetCohesionRatio() * GetManpowerRatio());
 
+            target.Manpower -= attackInfo.ManpowerAttack;
+            if (target.Manpower < 0)
+            {
+                target.Manpower = 0;
+            }
+            target.Cohesion -= attackInfo.CohesionAttack;
+            if (target.Cohesion < 0)
+            {
+                target.Cohesion = 0;
+                target.Rout();
+            }
+            Supply -= attackInfo.SupplyCost;
+            target.unitUi.UpdateWhenAttacked();
+            unitUi.UpdateSupply();
             return attackInfo;
+        }
+
+        public int GetMaxManpowerAttack()
+        {
+            var manpowerAttack = Template.Attack.ManpowerAttackBonus;
+            foreach (var enchancement in Enchancements)
+            {
+                manpowerAttack += enchancement.Attack.ManpowerAttackBonus;
+            }
+            foreach (var dice in Template.Attack.ManpowerAttackDices)
+            {
+                manpowerAttack += dice.MaxValue();
+            }
+            foreach (var enchancement in Enchancements)
+            {
+                foreach (var dice in enchancement.Attack.ManpowerAttackDices)
+                {
+                    manpowerAttack += dice.MaxValue();
+                }
+            }
+            manpowerAttack = Mathf.RoundToInt((float)manpowerAttack * GetCohesionRatio() * GetManpowerRatio());
+
+            return manpowerAttack;
         }
 
         public void Unclick()
@@ -189,7 +268,8 @@ namespace Project.Units
             {
                 UnitPath.Show();
                 player.SelectedUnits.Add(this);
-                Debug.Log("Selected");
+                Debug.Log(name+ " selected");
+                unitUi.Select();
                 foreach (var tr in transform.GetComponentsInChildren<Transform>())
                 {
                     if (tr.gameObject.layer != tranparentLM)
@@ -202,6 +282,7 @@ namespace Project.Units
             {
                 UnitPath.Hide();
                 player.SelectedUnits.Remove(this);
+                unitUi.Deselect();
                 foreach (var tr in transform.GetComponentsInChildren<Transform>())
                 {
                     if (tr.gameObject.layer != tranparentLM)
@@ -210,6 +291,28 @@ namespace Project.Units
                     }
                 }
             }
+        }
+
+        public bool Rout()
+        {
+            foreach (var area in location.Neighbours)
+            {
+                var canMove = true;
+                foreach (var unit in area.Units)
+                {
+                    if (unit.GetOrganization().Enemies.Contains(organization))
+                    {
+                        canMove = false;
+                        break;
+                    }
+                }
+                if (canMove)
+                {
+                    Move(area);
+                    return true;
+                }
+            }
+            return false;
         }
 
         public float Speed()
@@ -281,13 +384,41 @@ namespace Project.Units
             }
             while (remainingTravelToNextArea <= 0)
             {
-                if (path== null)
+                if (path == null)
                 { 
                     break;
                 }
-                Debug.Log("MOVE");
+                if (path.Count >= 2)
+                {
+                    foreach (var unit in path[1].Units)
+                    {
+                        if (unit.GetOrganization().Enemies.Contains(organization))
+                        {
+                            Debug.Log(name+" attacking " +unit.name);
+                            Attack(unit);
+                            unit.Attack(this);
+                            if (unitAttack is null)
+                            {
+                                unitAttack = Instantiate(UnitAttackPrefab);
+                                unitAttack.Init(unitUi.RectTransform,unit.unitUi.RectTransform);
+                                unitAttack.transform.parent=UnityEngine.Camera.main.GetComponentInChildren<Canvas>().transform;
+                                unitAttack.transform.localScale = new Vector3(1, 1, 1);
+                                unitAttack.transform.localPosition = new Vector3();
+                                unitAttack.transform.localRotation = new Quaternion();
+                            }
+                            return;
+                        }
+                    }
+                }
+                if (unitAttack !=null)
+                {
+                    Destroy(unitAttack);
+                }
+                Debug.Log(name+ " moving to "+path[0].name);
                 path.RemoveAt(0);
+                location.Units.Remove(this);
                 location = path[0];
+                location.Units.Add(this);
                 if (path.Count > 1)
                 {
                     remainingTravelToNextArea += Template.IgnoreTerrain?1: path[0].Weight();
@@ -353,7 +484,7 @@ namespace Project.Units
 
         public void CreateUIBar()
         {
-            unitBar = UI.UnitBar.Create(UnityEngine.Camera.main.GetComponentInChildren<Canvas>(),this);
+            //unitBar = UI.UnitBar.Create(UnityEngine.Camera.main.GetComponentInChildren<Canvas>(),this);
         }
 
         public void UpdateUIBarValues()

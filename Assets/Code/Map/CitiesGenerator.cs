@@ -9,6 +9,7 @@ namespace Project.Map
     {
         public City CityPrefab;
         public TextAsset CityNamesFile;
+        public Organizations.OrganizationsGenerator OrganizationsGenerator;
 
         public List<BasicResourceGeneratorType> BasicResourceGenerators;
 
@@ -44,6 +45,7 @@ namespace Project.Map
                     }
                 }
             }
+            OrganizationsGenerator.Generate();
             return cities;
         }
 

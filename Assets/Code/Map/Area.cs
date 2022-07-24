@@ -22,6 +22,7 @@ namespace Project.Map
         public Forest Forest;
         public City City;
         public AreaGroup AreaGroup { get; private set; }
+        public List<Units.Unit> Units = new List<Units.Unit>();
 
         private UnityEngine.Material material;
         private UI.CityView cityView;

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <UnitTemplate>
-  <Icon />
+  <UnitMaterial>Units/Soldier/Materials/InfantryIcon</UnitMaterial>
   <Enchancement>False</Enchancement>
   <Attack>
     <Piercing>0</Piercing>
@@ -12,16 +12,17 @@
       <Dice>D6</Dice>
     </ManpowerAttackDices>
     <CohesionAttackDices>
-      <Dice>D6</Dice>
+      <Dice>D8</Dice>
     </CohesionAttackDices>
   </Attack>
   <Defense>
-    <Armor>0</Armor>
-    <MaxEntrenchment>6</MaxEntrenchment>
+    <Armor>1</Armor>
+    <MaxEntrenchment>4</MaxEntrenchment>
     <Morale>0</Morale>
   </Defense>
   <Speed>0,25</Speed>
   <IgnoreTerrain>False</IgnoreTerrain>
   <MaxManpower>100</MaxManpower>
   <MaxCohesion>100</MaxCohesion>
+  <MaxSupply>100</MaxSupply>
 </UnitTemplate>

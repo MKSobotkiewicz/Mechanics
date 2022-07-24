@@ -16,6 +16,9 @@ namespace Project.Utility
         private bool beganOrdering;
         private readonly Vector3[] corners = new Vector3[2];
 
+        private float timerMax = 0.2f;
+        private float timer = 0;
+
         void Start()
         {
             camera = GetComponent<UnityEngine.Camera>();
@@ -29,6 +32,11 @@ namespace Project.Utility
 
         void Update()
         {
+            if (timer > 0)
+            {
+                timer -= UnityEngine.Time.deltaTime;
+                return;
+            }
             if (Input.GetAxis("Select") > 0)
             {
                 SelectTrue();
@@ -45,6 +53,13 @@ namespace Project.Utility
             {
                 OrderFalse();
             }
+        }
+
+        public void Break()
+        {
+            beganSelecting = false;
+            beganOrdering = false;
+            timer = timerMax;
         }
         
         private void SelectTrue()

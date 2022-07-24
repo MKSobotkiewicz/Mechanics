@@ -10,6 +10,10 @@ namespace Project.Dices
     {
         private static readonly Random random = new Random();
 
+        public override int MaxValue()
+        {
+            return 8;
+        }
         public override int Roll()
         {
             return random.Next(1, 9);

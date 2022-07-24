@@ -7,8 +7,10 @@ using Project.Resources;
 
 namespace Project.Organizations
 {
-    public class OrganizationsGenerator
+    public class OrganizationsGenerator:MonoBehaviour
     {
+        public FlagsGenerator FlagsGenerator;
+
         private readonly Map.MapData mapData;
 
         public OrganizationsGenerator(Map.MapData _mapData)
@@ -16,9 +18,23 @@ namespace Project.Organizations
             mapData = _mapData; 
         }
 
-        public Organization Create()
+        public void Generate()
         {
-            var TotalNetCosts = ResourceGenerator.TotalCostPerDay - ResourceGenerator.TotalProductionPerDay;
+            foreach (var city in Map.City.AllCities)
+            {
+                var organization=Create(city.name);
+                organization.OwnedCities.Add(city);
+                city.UpdateFlag(organization.Flag);
+            }
+        }
+
+        public Organization Create(string name)
+        {
+            var go = new GameObject(name);
+            go.transform.parent = transform;
+            var organization = go.AddComponent<Organization>();
+            organization.Initialize(name, FlagsGenerator.Generate());
+            /*var TotalNetCosts = ResourceGenerator.TotalCostPerDay - ResourceGenerator.TotalProductionPerDay;
             Debug.Log(".TotalCostPerDay:");
             ResourceGenerator.TotalCostPerDay.Log();
             Debug.Log("TotalProductionPerDay:");
@@ -32,7 +48,7 @@ namespace Project.Organizations
             else
             {
                 Debug.Log("Costs are supplied.");
-                Resource mostValuableResource;
+                //Resource mostValuableResource;
                 foreach (var resource in ResourceGenerator.TotalProductionPerDay)
                 {
 
@@ -41,8 +57,8 @@ namespace Project.Organizations
             foreach (var resourceGenerator in ResourceGenerator.AllResurceGenerators)
             {
 
-            }
-            return null;
+            }*/
+            return organization;
         }
     }
 }

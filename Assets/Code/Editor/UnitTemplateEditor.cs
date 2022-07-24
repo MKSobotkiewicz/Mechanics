@@ -26,7 +26,7 @@ namespace Project.Units
             UnitTemplate unitTemplate = (UnitTemplate)target;
             unitTemplate.LoadFromXml();
 
-            unitTemplate.Icon = (Sprite)EditorGUILayout.ObjectField("Icon",unitTemplate.Icon,typeof(Sprite));
+            unitTemplate.UnitMaterial = (UnityEngine.Material)EditorGUILayout.ObjectField("UnitMaterial", unitTemplate.UnitMaterial, typeof(UnityEngine.Material));
 
             EditorGUILayout.HelpBox("Checks if it's standalone unit or enchancement to other units.", MessageType.None);
             unitTemplate.Enchancement = EditorGUILayout.Toggle("Enchancement", unitTemplate.Enchancement);
@@ -42,9 +42,11 @@ namespace Project.Units
             EditorGUILayout.LabelField("Combat stats", EditorStyles.miniLabel);
             EditorGUI.indentLevel++;
             EditorGUILayout.HelpBox("Manpower represents unit soldiers. Lower manpower makes all unit attacks proportionally lower. When Manpower reaches zero the unit is destroyed.", MessageType.None);
-            unitTemplate.MaxManpower = (uint)EditorGUILayout.IntSlider("Max Manpower", (int)unitTemplate.MaxManpower, 10, 500);
+            unitTemplate.MaxManpower = EditorGUILayout.IntSlider("Max Manpower", (int)unitTemplate.MaxManpower, 10, 500);
             EditorGUILayout.HelpBox("Cohesion represents unit capability to fight. Does not affect unit attacks, but cohesion of 0 makes unit rout.", MessageType.None);
-            unitTemplate.MaxCohesion = (uint)EditorGUILayout.IntSlider("Max Cohesion", (int)unitTemplate.MaxCohesion, 10, 500);
+            unitTemplate.MaxCohesion = EditorGUILayout.IntSlider("Max Cohesion", (int)unitTemplate.MaxCohesion, 10, 500);
+            EditorGUILayout.HelpBox("Supplies are used to perform attacks.", MessageType.None);
+            unitTemplate.MaxSupply = EditorGUILayout.IntSlider("Max Supply", (int)unitTemplate.MaxSupply, 0, 500);
 
             EditorGUILayout.LabelField("Attack", EditorStyles.miniLabel);
             EditorGUI.indentLevel++;
@@ -113,6 +115,8 @@ namespace Project.Units
             unitTemplate.Attack.CohesionAttackBonus = EditorGUILayout.IntSlider("Cohesion Atack Bonus", unitTemplate.Attack.CohesionAttackBonus, 0, 20);
             EditorGUILayout.HelpBox("Terror negates enemy morale(cohesion defense).", MessageType.None);
             unitTemplate.Attack.Terror = EditorGUILayout.IntSlider("Terror", unitTemplate.Attack.Terror, 0, 20);
+            EditorGUILayout.HelpBox("Supply cost to perform attack.", MessageType.None);
+            unitTemplate.Attack.SupplyCost = EditorGUILayout.IntSlider("Atack Supply Cost", unitTemplate.Attack.SupplyCost, 0, 20);
             EditorGUI.indentLevel--;
             
             EditorGUILayout.LabelField("Defense", EditorStyles.miniLabel);

@@ -14,7 +14,7 @@ namespace Project.Units
     public class UnitTemplate : MonoBehaviour ,Utility.IXmlNode
     {
         [HideInInspector]
-        public Sprite Icon;
+        public UnityEngine.Material UnitMaterial;
         [HideInInspector]
         public bool Enchancement = false;
         [HideInInspector]
@@ -26,18 +26,20 @@ namespace Project.Units
         [HideInInspector]
         public bool IgnoreTerrain;
         [HideInInspector]
-        public uint MaxManpower = 100;
+        public int MaxManpower = 100;
         [HideInInspector]
-        public uint MaxCohesion = 100;
+        public int MaxCohesion = 100;
+        [HideInInspector]
+        public int MaxSupply = 100;
 
         public XmlNode ToXmlNode(XmlDocument document)
         {
             var unitTemplateNode = document.CreateNode(XmlNodeType.Element, "UnitTemplate", null);
 
-            var iconNode = document.CreateNode(XmlNodeType.Element, "Icon", null);
-            if (Icon != null)
+            var iconNode = document.CreateNode(XmlNodeType.Element, "UnitMaterial", null);
+            if (UnitMaterial != null)
             {
-                iconNode.InnerText = Icon.name;
+                iconNode.InnerText = AssetDatabase.GetAssetPath(UnitMaterial).Replace("Assets/Resources/","").Replace(".mat", "");
             }
             unitTemplateNode.AppendChild(iconNode);
 
@@ -64,6 +66,10 @@ namespace Project.Units
             var maxCohesionNode = document.CreateNode(XmlNodeType.Element, "MaxCohesion", null);
             maxCohesionNode.InnerText = MaxCohesion.ToString();
             unitTemplateNode.AppendChild(maxCohesionNode);
+
+            var maxSupplyNode = document.CreateNode(XmlNodeType.Element, "MaxSupply", null);
+            maxSupplyNode.InnerText = MaxSupply.ToString();
+            unitTemplateNode.AppendChild(maxSupplyNode);
 
             return unitTemplateNode;
         }
@@ -95,8 +101,8 @@ namespace Project.Units
             {
                 switch (child.Name)
                 {
-                    case "Icon":
-                        Icon = UnityEngine.Resources.Load<Sprite>(child.InnerText);
+                    case "UnitMaterial":
+                        UnitMaterial = UnityEngine.Resources.Load<UnityEngine.Material>(child.InnerText);
                         break;
                     case "Enchancement":
                         Enchancement = bool.Parse(child.InnerText);
@@ -114,10 +120,13 @@ namespace Project.Units
                         IgnoreTerrain = bool.Parse(child.InnerText);
                         break;
                     case "MaxManpower":
-                        MaxManpower = uint.Parse(child.InnerText);
+                        MaxManpower = int.Parse(child.InnerText);
                         break;
                     case "MaxCohesion":
-                        MaxCohesion = uint.Parse(child.InnerText);
+                        MaxCohesion = int.Parse(child.InnerText);
+                        break;
+                    case "MaxSupply":
+                        MaxSupply = int.Parse(child.InnerText);
                         break;
                     default:
                         break;

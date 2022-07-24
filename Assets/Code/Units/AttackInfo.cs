@@ -9,6 +9,8 @@ namespace Project.Units
     [Serializable]
     public class AttackInfo
     {
+        public bool EnoughSupplies { get; set; }
+        public int SupplyCost { get; set; }
         public int Piercing { get; set; }
         public int Breakthrough { get; set; }
         public int Terror { get; set; }

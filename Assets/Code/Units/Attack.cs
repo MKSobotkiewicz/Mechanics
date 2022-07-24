@@ -18,6 +18,8 @@ namespace Project.Units
         [HideInInspector]
         public int Terror { get; set; }
         [HideInInspector]
+        public int SupplyCost { get; set; }
+        [HideInInspector]
         public int ManpowerAttackBonus { get; set; }
         [HideInInspector]
         public int CohesionAttackBonus { get; set; }

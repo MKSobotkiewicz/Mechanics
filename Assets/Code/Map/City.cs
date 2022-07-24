@@ -16,6 +16,8 @@ namespace Project.Map
         private MeshFilter meshFilter;
         private MapData mapData;
 
+        public static List<City> AllCities { get; private set; } = new List<City>();
+
         public void Start()
         {
             textPosition = Vector3.RotateTowards(transform.position,Vector3.down,0.01f,0);
@@ -34,6 +36,7 @@ namespace Project.Map
             cityName.UpdateFollowed(this);
             cityName.UpdateName();
             SetVertexColors(1);
+            AllCities.Add(this);
         }
 
         public Vector3 FollowedPosition()
@@ -44,6 +47,11 @@ namespace Project.Map
         public string Name()
         {
             return name;
+        }
+
+        public void UpdateFlag(Texture2D flag)
+        {
+            cityName.UpdateFlag(flag);
         }
 
         private void SetVertexColors(int size)

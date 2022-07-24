@@ -8,12 +8,12 @@ using UnityEngine.UI;
 
 namespace Project.UI
 {
-    public class CityView : MonoBehaviour,Time.IDaily
+    public class CityView : MonoBehaviour, Project.Time.IDaily
     {
         public CityGeneratorsList CityGeneratorsList;
         public CityResourcesList CityResourcesList;
         public float slideValue;
-        public Time.Time Time;
+        public Project.Time.Time Time;
 
         private Map.Area area;
         private Vector2 position;

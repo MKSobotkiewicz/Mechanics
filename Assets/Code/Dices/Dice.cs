@@ -10,6 +10,7 @@ namespace Project.Dices
     public abstract class Dice : Utility.IXmlNode
     {
         public abstract int Roll();
+        public abstract int MaxValue();
         public abstract EDice ToEnum();
 
         public XmlNode ToXmlNode(XmlDocument document)

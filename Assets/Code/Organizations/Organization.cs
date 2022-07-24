@@ -8,15 +8,28 @@ namespace Project.Organizations
 {
     public class Organization : MonoBehaviour
     {
+        public List<Organization> Enemies;
         public List<Resources.ResourceGenerator> OwnedResourceGenerators;
+        public List<Map.City> OwnedCities=new List<Map.City>();
         public Color Color;
+        public Texture2D Flag;
+        public FlagsGenerator FlagsGenerator;
+
+        public static List<Organization> AllOrganizations { get; private set; } = new List<Organization>();
 
         public void Start()
         {
+            if (FlagsGenerator!= null)
+            {
+                Flag = FlagsGenerator.Generate();
+            }
         }
 
-        public void Initialize(string name)
+        public void Initialize(string name, Texture2D flag)
         {
+            gameObject.name = name;
+            Flag = flag;
+            AllOrganizations.Add(this);
         }
 
         public Resources.ResourceValueList GetDailyResourceCosts()

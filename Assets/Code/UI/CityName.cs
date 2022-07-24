@@ -11,10 +11,16 @@ namespace Project.UI
     public class CityName:Follower
     {
         public Text Name;
+        public RawImage Flag;
 
         public void UpdateName()
         {
             Name.text = followed.Name().ToUpper();
+        }
+
+        public void UpdateFlag(Texture2D flag)
+        {
+            Flag.texture = flag;
         }
     }
 }

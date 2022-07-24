@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <UnitTemplate>
-  <Icon />
+  <UnitMaterial />
   <Enchancement>False</Enchancement>
   <Attack>
     <Piercing>0</Piercing>
@@ -24,4 +24,5 @@
   <IgnoreTerrain>False</IgnoreTerrain>
   <MaxManpower>100</MaxManpower>
   <MaxCohesion>100</MaxCohesion>
+  <MaxSupply>100</MaxSupply>
 </UnitTemplate>
