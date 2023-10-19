@@ -41,7 +41,7 @@ namespace Project.Map
                     cities.Add(CreateCity(Utility.ListUtilities.GetRandomObject(names),area));
                     foreach (var basicResourceGenerator in BasicResourceGenerators)
                     {
-                        area.AddResourceGenerator(basicResourceGenerator.ResourceGeneratorType, basicResourceGenerator.Count);
+                        area.AddResourceGenerator(basicResourceGenerator.ResourceGeneratorType, basicResourceGenerator.Count, true);
                     }
                 }
             }

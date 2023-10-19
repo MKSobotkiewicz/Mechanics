@@ -24,7 +24,7 @@ namespace Project.Camera
             var defaultValue= -camera.transform.localPosition.z;
             var distances = Enumerable.Repeat(defaultValue, 32).ToArray();
             //distances[LayerMask.NameToLayer("Area")] = AreasCulling;
-            distances[LayerMask.NameToLayer("Forests")] = ForestsCulling;
+            //distances[LayerMask.NameToLayer("Forests")] = ForestsCulling;
             distances[LayerMask.NameToLayer("Stars")] = StarsCulling;
             camera.layerCullDistances = distances;
             //camera.farClipPlane = defaultValue;
@@ -35,7 +35,7 @@ namespace Project.Camera
             var defaultValue = -camera.transform.localPosition.z;
             var distances = Enumerable.Repeat(defaultValue, 32).ToArray();
             //distances[LayerMask.NameToLayer("Area")] = AreasCulling;
-            distances[LayerMask.NameToLayer("Forests")] = ForestsCulling;
+            //distances[LayerMask.NameToLayer("Forests")] = ForestsCulling;
             distances[LayerMask.NameToLayer("Stars")] = StarsCulling;
             camera.layerCullDistances = distances;
             //camera.farClipPlane = defaultValue;

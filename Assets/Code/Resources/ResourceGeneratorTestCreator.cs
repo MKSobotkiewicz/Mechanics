@@ -14,7 +14,7 @@ namespace Project.Resources
             var rd = ResourceDepot.Create(Time);
             foreach (var resourceGeneratorType in ResourceGeneratorTypes)
             {
-                var rg = ResourceGenerator.Create(rd, resourceGeneratorType,1, Time);
+                var rg = ResourceGenerator.Create(rd, resourceGeneratorType,1, Time,true);
             }
         }
     }

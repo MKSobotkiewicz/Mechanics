@@ -8,6 +8,11 @@ namespace Project.Units
 {
     public class Weapon:MonoBehaviour
     {
-        public Attack Attack;
+        public Animator Animator;
+
+        public void PlayAttackAnimation()
+        {
+            Animator.SetTrigger("Attack");
+        }
     }
 }

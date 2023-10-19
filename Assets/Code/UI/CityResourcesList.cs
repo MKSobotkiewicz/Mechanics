@@ -50,11 +50,17 @@ namespace Project.UI
             var netDeficits = area.GetNetResourceDeficit();
             foreach (var netDeficit in netDeficits)
             {
-                deficits.Add(Instantiate(ResourcePrefab, DeficitList.transform).Init(netDeficit.Resource, -(long)netDeficit.Value));
+                if (!netDeficit.Resource.Unextracted)
+                {
+                    deficits.Add(Instantiate(ResourcePrefab, DeficitList.transform).Init(netDeficit.Resource, -(long)netDeficit.Value));
+                }
             }
             foreach (var stockpile in area.ResourceDepot.resources)
-            {
-                stockpiles.Add(Instantiate(ResourcePrefab, StockpileList.transform).Init(stockpile.Resource, (long)stockpile.Value));
+                {
+                if (!stockpile.Resource.Unextracted)
+                {
+                    stockpiles.Add(Instantiate(ResourcePrefab, StockpileList.transform).Init(stockpile.Resource, (long)stockpile.Value));
+                }
             }
         }
     }

@@ -12,44 +12,52 @@ namespace Project.Utility
     {
         public static string Parse(long value)
         {
+            float fValue = 0;
             if (value == 0)
             {
-                return "00000";
+                return "0";
             }
             var prefix = Prefix.none;
-            if (value > 0)
+            //if (value > 0)
+            //{
+            if (value >= 1000000000000000 || value <= -1000000000000000)
             {
-                if (value >= 10000000000000000 || value <= -10000000000000000)
-                {
-                    prefix = Prefix.P;
-                    value /= 1000000000000000;
-                }
-                else if (value >= 10000000000000 || value <= -10000000000000)
-                {
-                    prefix = Prefix.T;
-                    value /= 1000000000000;
-                }
-                else if (value >= 10000000000 || value <= -10000000000)
-                {
-                    prefix = Prefix.G;
-                    value /= 1000000000;
-                }
-                else if (value >= 10000000 || value <= -10000000)
-                {
-                    prefix = Prefix.M;
-                    value /= 1000000;
-                }
-                else if (value >= 10000 || value <= -10000)
-                {
-                    prefix = Prefix.k;
-                    value /= 1000;
-                }
-                if (prefix != Prefix.none)
-                {
-                    return value.ToString("0000") + prefix.ToString();
-                }
-                return value.ToString("00000");
+                prefix = Prefix.P;
+                fValue = value / 1000000000000000;
             }
+            else if (value >= 1000000000000 || value <= -1000000000000)
+            {
+                prefix = Prefix.T;
+                fValue = value / 1000000000000;
+            }
+            else if (value >= 1000000000 || value <= -1000000000)
+            {
+                prefix = Prefix.G;
+                fValue = value / 1000000000;
+            }
+            else if (value >= 1000000 || value <= -1000000)
+            {
+                prefix = Prefix.M;
+                fValue = value / 1000000;
+            }
+            else if (value >= 1000 || value <= -1000)
+            {
+                prefix = Prefix.k;
+                fValue = value / 1000;
+            }
+            if (prefix != Prefix.none)
+            {
+                if (fValue < 10 && fValue > -10)
+                {
+                    return fValue.ToString("0.0") + prefix.ToString();
+                }
+                else
+                {
+                    return fValue.ToString("0") + prefix.ToString();
+                }
+            }
+            return value.ToString("0");
+            /*}
             if (value >= 1000000000000000 || value <= -1000000000000000)
             {
                 prefix = Prefix.P;
@@ -82,7 +90,7 @@ namespace Project.Utility
                     return value.ToString("000") + prefix.ToString();
                 }
                 return value.ToString("0000");
-            }
+            }*/
             return "ERROR";
         }
 

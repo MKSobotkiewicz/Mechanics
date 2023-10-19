@@ -10,7 +10,7 @@ namespace Project.Units
     public interface IMovable:Time.IHourly
     {
         Map.Area Location();
-        List<Map.Area> Path();
+        Pathfinding.Path Path();
         bool Move(Map.Area target);
         float Speed();
         float RemainingTravelToNextArea();

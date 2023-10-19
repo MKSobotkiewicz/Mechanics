@@ -1,0 +1,30 @@
+﻿#pragma kernel CSMain
+
+#define MESH_COUNT 64
+#define VERTICES_PER_MESH 10000
+
+RWStructuredBuffer<int> Triangles;
+RWStructuredBuffer<float3> Vertices;
+RWStructuredBuffer<int> TrianglesOut;
+RWStructuredBuffer<float3> VerticesOut;
+
+[numthreads(MESH_COUNT, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	int vertexCount = 0;
+	for (int i = id.x * VERTICES_PER_MESH; i < (id.x + 1)*VERTICES_PER_MESH;i++)
+	{
+		if (TrianglesOut[i] == 0)
+		{
+			VerticesOut[vertexCount+ VERTICES_PER_MESH*i] = Vertices[Triangles[id.x]];
+			for (int j = id.x * VERTICES_PER_MESH; j < (id.x + 1)*VERTICES_PER_MESH;j++)
+			{
+				if (Triangles[j] == Triangles[i])
+				{
+					TrianglesOut[j] = vertexCount;
+				}
+			}
+			vertexCount++;
+		}
+	}
+}

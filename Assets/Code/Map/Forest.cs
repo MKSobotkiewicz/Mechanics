@@ -10,8 +10,7 @@ namespace Project.Map
     {
         public UnityEngine.Material SummerMaterial;
         public UnityEngine.Material WinterMaterial;
-
-        private ParticleSystemRenderer particleSystemRenderer;
+        
         private Vector3 position;
         private Globe.SnowMovement snowMovement;
         private bool summer = true;
@@ -23,7 +22,6 @@ namespace Project.Map
             var forest = Instantiate(prefab);
             forest.transform.position = area.Position;
             forest.transform.LookAt(new Vector3());
-            forest.particleSystemRenderer = forest.GetComponentInChildren<ParticleSystemRenderer>();
             forest.position = forest.transform.position / scale;
             forest.snowMovement = _snowMovement;
             forest.transform.SetParent(parent);

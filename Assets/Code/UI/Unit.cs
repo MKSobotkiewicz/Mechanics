@@ -13,12 +13,14 @@ namespace Project.UI
         public RectTransform RectTransform;
         public Image Outline;
         public RawImage Flag;
-        public Image UnitIcon;
+        //public Image UnitIcon;
         public Text MaxAttack;
 
         public UiBar ManpowerBar;
         public UiBar CohesionBar;
         public UiBar SupplyBar;
+
+        public Damage DamagePrefab;
 
         private Units.Unit unitGameobject;
         private Utility.MouseRaycasting mouseRaycasting;
@@ -40,7 +42,7 @@ namespace Project.UI
         {
             unitGameobject = _unitGameobject;
             Flag.texture = unitGameobject.GetOrganization().Flag;
-            UnitIcon.material = unitGameobject.Template.UnitMaterial;
+            //UnitIcon.material = unitGameobject.Template.UnitMaterial;
             UpdateValues();
         }
 
@@ -51,14 +53,20 @@ namespace Project.UI
 
         public void UpdateWhenAttacked()
         {
-            MaxAttack.text = unitGameobject.GetMaxManpowerAttack().ToString();
-            ManpowerBar.UpdateValue(unitGameobject.GetManpowerRatio());
+            if (unitGameobject.LastTimeAttackedInfo.ManpowerAttack > 0)
+            {
+                var damage=Instantiate(DamagePrefab,transform);
+                damage.gameObject.SetActive(true);
+                damage.Init(unitGameobject.LastTimeAttackedInfo.ManpowerAttack);
+                ManpowerBar.UpdateValue(unitGameobject.GetManpowerRatio());
+            }
             CohesionBar.UpdateValue(unitGameobject.GetCohesionRatio());
+            MaxAttack.text = ((uint)(unitGameobject.GetMaxManpowerAttack())).ToString("D2");
         }
 
         public void UpdateValues()
         {
-            MaxAttack.text = unitGameobject.GetMaxManpowerAttack().ToString();
+            MaxAttack.text = ((uint)(unitGameobject.GetMaxManpowerAttack())).ToString("D2");
             ManpowerBar.UpdateValue(unitGameobject.GetManpowerRatio());
             CohesionBar.UpdateValue(unitGameobject.GetCohesionRatio());
             SupplyBar.UpdateValue(unitGameobject.GetSupplyRatio());

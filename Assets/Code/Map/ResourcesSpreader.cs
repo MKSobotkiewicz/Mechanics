@@ -26,7 +26,7 @@ namespace Project.Map
                 while (count > 0)
                 {
                     var area = Utility.ListUtilities.GetRandomObject(areas);
-                    area.AddResourceGenerator(naturalResource.ResourceGeneratorType,1);
+                    area.AddResourceGenerator(naturalResource.ResourceGeneratorType,1,true);
                     areas.Remove(area);
                     count--;
                 }

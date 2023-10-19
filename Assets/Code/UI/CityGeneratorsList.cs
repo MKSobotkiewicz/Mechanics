@@ -24,7 +24,7 @@ namespace Project.UI
             resourceGenerators.Clear();
             foreach (var areaResourceGenerator in area.ResourceGenerators)
             {
-                var resourceGenerator = Instantiate(ResourceGeneratorPrefab,List.transform);
+                var resourceGenerator = Instantiate(ResourceGeneratorPrefab, List.transform);
                 resourceGenerator.Init(areaResourceGenerator);
                 resourceGenerators.Add(resourceGenerator);
             }

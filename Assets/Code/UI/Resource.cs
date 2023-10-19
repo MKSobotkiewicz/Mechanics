@@ -13,6 +13,7 @@ namespace Project.UI
         public Text NameText;
         public Text ValueText;
         public Image Image;
+        public Image OverlayPanel;
 
         private Resources.Resource resource;
         private long value=0;
@@ -27,6 +28,16 @@ namespace Project.UI
             return this;
         }
 
+        public void OverlayOn()
+        {
+            OverlayPanel.enabled = true;
+        }
+
+        public void OverlayOff()
+        {
+            OverlayPanel.enabled = false;
+        }
+
         public void SetValue(long newValue)
         {
             value = newValue;
@@ -38,7 +49,7 @@ namespace Project.UI
             }
             if (newValue < 0)
             {
-                ValueText.color = new Color(1, 0, 0, 1);
+                ValueText.color = new Color(1, 0.5f, 0.5f, 1);
                 return;
             }
             if (newValue > 0)

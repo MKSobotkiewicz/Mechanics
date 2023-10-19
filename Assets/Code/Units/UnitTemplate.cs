@@ -39,7 +39,7 @@ namespace Project.Units
             var iconNode = document.CreateNode(XmlNodeType.Element, "UnitMaterial", null);
             if (UnitMaterial != null)
             {
-                iconNode.InnerText = AssetDatabase.GetAssetPath(UnitMaterial).Replace("Assets/Resources/","").Replace(".mat", "");
+                iconNode.InnerText = AssetDatabase.GetAssetPath(UnitMaterial).Replace("Assets/Resources/", "").Replace(".mat", "");
             }
             unitTemplateNode.AppendChild(iconNode);
 

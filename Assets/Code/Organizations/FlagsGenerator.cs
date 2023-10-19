@@ -23,7 +23,7 @@ namespace Project.Organizations
             for (int i=0;i<3;i++)
             {
                 var ticket = Utility.ListUtilities.GetRandomObject(lottery);
-                Debug.Log(ticket);
+                //Debug.Log(ticket);
                 lottery.Remove(ticket);
                 switch (ticket)
                 {

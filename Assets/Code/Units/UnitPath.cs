@@ -15,18 +15,29 @@ namespace Project.Units
 
         private Spline.Spline spline;
         private MeshRenderer splineMeshRenderer;
+        private List<Vector3> positions;
+        private bool shown=true;
 
-        public void Create(Vector3 start, List<Map.Area> path, Transform unitPaths)
+        public void Create(Vector3 start, Pathfinding.Path path, Transform unitPaths)
         {
+            Debug.Log("CREATING_PATH");
             Destroy();
-            List<Vector3> positions = new List<Vector3>();
+            positions = new List<Vector3>();
             positions.Add(start);
-            for (int i = 1; i < path.Count; i++)
+            for (int i = 1; i < path.path.Count; i++)
             {
-                positions.Add(path[i].Position);
+                positions.Add((path.path[i] as Map.MapPointNode).Area.Position);
             }
             spline = Spline.Spline.CreateSpline(positions, unitPaths, SelectedMaterial, "Unit Path", 5, 10, 1, Spline.Spline.EMarker.EndWithArrow, 0);
             splineMeshRenderer = spline.GetComponent<MeshRenderer>();
+            if (shown)
+            {
+                splineMeshRenderer.material = SelectedMaterial;
+            }
+            else
+            {
+                splineMeshRenderer.material = UnselectedMaterial;
+            }
         }
 
         public void Destroy()
@@ -37,14 +48,14 @@ namespace Project.Units
             }
             Destroy(spline.gameObject);
         }
-
+        
         public void Hide()
         {
             if (spline == null)
             {
                 return;
             }
-            //spline.gameObject.SetActive(false);
+            shown = false;
             splineMeshRenderer.material = UnselectedMaterial;
         }
 
@@ -54,7 +65,7 @@ namespace Project.Units
             {
                 return;
             }
-            //spline.gameObject.SetActive(true);
+            shown = true;
             splineMeshRenderer.material = SelectedMaterial;
         }
     }

@@ -23,6 +23,7 @@ namespace Project.Map
         public City City;
         public AreaGroup AreaGroup { get; private set; }
         public List<Units.Unit> Units = new List<Units.Unit>();
+        public MapPointNode MapPointNode;
 
         private UnityEngine.Material material;
         private UI.CityView cityView;
@@ -34,6 +35,7 @@ namespace Project.Map
         private Time.Time time;
         private UI.ResourceIconGroup ResourceIconGroup;
         private Player.Player player;
+        private AstarPath path;
         private readonly Canvas canvas;
 
         private static Area clicked;
@@ -61,8 +63,15 @@ namespace Project.Map
             ResourceDepot.transform.localPosition = new Vector3();
         }
 
-        public void Initialize(List<Area> areas, Player.Player _player,Canvas canvas)
+        public void Initialize(List<Area> areas, Player.Player _player, Canvas canvas, AstarPath _path)
         {
+            path = _path;
+            //MapPointNode = new MapPointNode(path, this);
+            AstarPath.active.AddWorkItem(new Pathfinding.AstarWorkItem(ctx => {
+                var graph = AstarPath.active.data.pointGraph;
+                MapPointNode = graph.AddNode<MapPointNode>(new MapPointNode(AstarPath.active, this),(Pathfinding.Int3)transform.position);
+                MapPointNode.Penalty = Weight();
+            }));
             player = _player;
             allAreas.Add(this);
             if (Neighbours.Count == 0)
@@ -81,6 +90,16 @@ namespace Project.Map
                 Debug.LogError("Missing Area UI");
             }
             SetMesh();
+        }
+
+        public void AddConnectionsToNeighbours()
+        {
+            foreach (var neighbour in Neighbours)
+            {
+                AstarPath.active.AddWorkItem(new Pathfinding.AstarWorkItem(ctx => {
+                    MapPointNode.AddConnection(neighbour.MapPointNode, neighbour.Weight());
+                }));
+            }
         }
 
         public Resources.ResourceValueList GetTotalResourceProduction()
@@ -265,7 +284,7 @@ namespace Project.Map
             Neighbours = neighbours;
         }
 
-        public float Weight()
+        public uint Weight()
         {
             if (Road)
             {
@@ -279,7 +298,7 @@ namespace Project.Map
             {
                 return 4;
             }
-            return float.MaxValue;
+            return uint.MaxValue;
         }
 
         public float Distance(Area area)
@@ -360,9 +379,9 @@ namespace Project.Map
             AddAreaToMapGeneratorAreaLists(mapGenerator);
         }
 
-        public void AddResourceGenerator(Resources.ResourceGeneratorType resourceGeneratorType,uint size)
+        public void AddResourceGenerator(Resources.ResourceGeneratorType resourceGeneratorType,uint size,bool instant)
         {
-            var rg = Resources.ResourceGenerator.Create(ResourceDepot, resourceGeneratorType, size, time);
+            var rg = Resources.ResourceGenerator.Create(ResourceDepot, resourceGeneratorType, size, time, instant);
             rg.transform.parent = transform;
             rg.transform.localPosition = new Vector3();
             ResourceGenerators.Add(rg);

@@ -33,7 +33,6 @@ namespace Project.Globe
                 Debug.LogError(name+ " missing MeshFilter.");
             }
             var mesh = meshFilter.mesh;
-            //mesh.Optimize();
             var vertices = mesh.vertices;
             var triangles = mesh.triangles;
             var colors = new Color[vertices.Length];
@@ -59,6 +58,7 @@ namespace Project.Globe
             GetNeighboursComputeShader.Dispatch(0, dataSize, 1, 1);
             
             ErosionComputeShader.SetBuffer(0, "Neighbours", neighboursBuffer);
+            ErosionComputeShader.SetBuffer(0, "Colors", colorsBuffer);
             ErosionComputeShader.SetBuffer(0, "Vertices", verticesBuffer);
             ErosionComputeShader.Dispatch(0, dataSize, 1, 1);
             
@@ -70,7 +70,7 @@ namespace Project.Globe
             trianglesBuffer.GetData(triangles);
             verticesBuffer.GetData(vertices);
             colorsBuffer.GetData(colors);
-
+            
             trianglesBuffer.Release();
             verticesBuffer.Release();
             colorsBuffer.Release();

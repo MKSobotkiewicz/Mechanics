@@ -20,6 +20,7 @@ namespace Project.Units
         public UI.UnitAttack UnitAttackPrefab;
         public UnitTemplate Template;
         public List<UnitTemplate> Enchancements = new List<UnitTemplate>();
+        public AttackInfo LastTimeAttackedInfo;
 
         private Transform unitPaths;
         private UI.Unit unitUi;
@@ -27,23 +28,27 @@ namespace Project.Units
         private Player.Player player;
         private Organizations.Organization organization;
         private Map.Area location;
-        private List<Map.Area> path;
+        private Pathfinding.Path path;
         private float remainingTravelToNextArea;
         private List<Animator> animators = new List<Animator>();
         private LayerMask layerMask;
         private GameObject soldiers;
         private UI.UnitAttack unitAttack;
+        private Pathfinding.Seeker seeker;
         public int Manpower;
         public int Cohesion;
         public int Supply;
 
         public static HashSet<Unit> AllUnits { get; private set; } = new HashSet<Unit>();
 
+        protected static readonly System.Random random = new System.Random();
+
         public void Init(Map.Area _location, Player.Player _player, Organizations.Organization _organization, Transform _unitPaths, Time.Time time)
         {
             unitUi = Instantiate(UnitUiPrefab, UnityEngine.Camera.main.GetComponentInChildren<Canvas>().transform);
             unitUi.RectTransform.localScale = new Vector3(1, 1, 1);
             animators = GetComponentsInChildren<Animator>().ToList();
+            Debug.Log(name+" have "+animators.Count+" animators.");
             time.AddHourly(this);
             time.AddDaily(this);
             unitPaths = _unitPaths;
@@ -84,6 +89,7 @@ namespace Project.Units
             }
             location.Units.Add(this);
             unitUi.Init(this);
+            seeker = gameObject.AddComponent<Pathfinding.Seeker>();
         }
 
         public string Name()
@@ -101,7 +107,7 @@ namespace Project.Units
             return location;
         }
 
-        public List<Map.Area> Path()
+        public Pathfinding.Path Path()
         {
             return path;
         }
@@ -205,7 +211,7 @@ namespace Project.Units
             attackInfo.CohesionAttack = attackInfo.CohesionAttack < 0 ? 0 : attackInfo.CohesionAttack;
             attackInfo.CohesionAttack = Mathf.RoundToInt((float)attackInfo.CohesionAttack * GetCohesionRatio() * GetManpowerRatio());
             attackInfo.ManpowerAttack = Mathf.RoundToInt((float)attackInfo.ManpowerAttack * GetCohesionRatio() * GetManpowerRatio());
-
+            
             target.Manpower -= attackInfo.ManpowerAttack;
             if (target.Manpower < 0)
             {
@@ -220,6 +226,7 @@ namespace Project.Units
             Supply -= attackInfo.SupplyCost;
             target.unitUi.UpdateWhenAttacked();
             unitUi.UpdateSupply();
+            target.LastTimeAttackedInfo = attackInfo;
             return attackInfo;
         }
 
@@ -337,12 +344,19 @@ namespace Project.Units
 
         public bool Move(Map.Area target)
         {
-            path = Utility.Pathfinder.FindPath(location,target, Template.IgnoreTerrain);
-            if (path!=null)
+            //path = Utility.Pathfinder.FindPath(location,target, Template.IgnoreTerrain);
+            //Debug.Log("IS_POSSIBLE="+Pathfinding.PathUtilities.IsPathPossible(AstarPath.active.GetNearest(location.transform.position).node, AstarPath.active.GetNearest(target.transform.position).node));
+            seeker.StartPath(location.transform.position,target.transform.position, OnPathComplete);
+            return true;
+        }
+
+        public void OnPathComplete(Pathfinding.Path _path)
+        {
+            path = _path;
+            if (path != null)
             {
-                remainingTravelToNextArea = Template.IgnoreTerrain ? 1 : path[0].Weight();
-                //uiElement.PathSuccess(path);
-                UpdatePosition(false);
+                remainingTravelToNextArea = Template.IgnoreTerrain ? 1 : path.path[1].Penalty;
+                UpdatePosition(true);
                 foreach (var animator in animators)
                 {
                     animator.SetBool("Moving", true);
@@ -351,10 +365,7 @@ namespace Project.Units
                 {
                     soldiers.SetActive(false);
                 }
-                return true;
             }
-            //uiElement.PathFail();
-            return false;
         }
 
         public uint Priority()
@@ -374,7 +385,7 @@ namespace Project.Units
             {
                 return;
             }
-            if (path.Count == 0)
+            if (path.path.Count == 0)
             {
                 return;
             }
@@ -388,9 +399,9 @@ namespace Project.Units
                 { 
                     break;
                 }
-                if (path.Count >= 2)
+                if (path.path.Count > 1)
                 {
-                    foreach (var unit in path[1].Units)
+                    foreach (var unit in (path.path[1] as Map.MapPointNode).Area.Units)
                     {
                         if (unit.GetOrganization().Enemies.Contains(organization))
                         {
@@ -405,6 +416,29 @@ namespace Project.Units
                                 unitAttack.transform.localScale = new Vector3(1, 1, 1);
                                 unitAttack.transform.localPosition = new Vector3();
                                 unitAttack.transform.localRotation = new Quaternion();
+                                unit.transform.LookAt(transform.position, unit.transform.position.normalized);
+                                if (soldiers != null)
+                                {
+                                    soldiers.SetActive(true);
+                                    SetSelected(Selected);
+                                }
+                                if (unit.soldiers != null)
+                                {
+                                    unit.soldiers.SetActive(true);
+                                    unit.SetSelected(Selected);
+                                }
+                                foreach (var animator in animators)
+                                {
+                                    animator.SetBool("Moving", false);
+                                    animator.SetBool("Attacking", true);
+                                    animator.speed = (float)random.NextDouble() + 0.5f;
+                                }
+                                foreach (var animator in unit.animators)
+                                {
+                                    animator.SetBool("Moving", false);
+                                    animator.SetBool("Attacking", true);
+                                    animator.speed = (float)random.NextDouble() + 0.5f;
+                                }
                             }
                             return;
                         }
@@ -414,29 +448,31 @@ namespace Project.Units
                 {
                     Destroy(unitAttack);
                 }
-                Debug.Log(name+ " moving to "+path[0].name);
-                path.RemoveAt(0);
+                Debug.Log(name+ " moving to "+ (path.path[1] as Map.MapPointNode).Area.name+", remaining travel:"+ remainingTravelToNextArea);
+                path.path.RemoveAt(0);
                 location.Units.Remove(this);
-                location = path[0];
+                location = (path.path[0] as Map.MapPointNode).Area;
                 location.Units.Add(this);
-                if (path.Count > 1)
+                if (path.path.Count > 1)
                 {
-                    remainingTravelToNextArea += Template.IgnoreTerrain?1: path[0].Weight();
+                    remainingTravelToNextArea += Template.IgnoreTerrain?1: path.path[1].Penalty;
                 }
-                else if (path.Count == 1)
+                else if (path.path.Count == 1)
                 {
                     UnitPath.Destroy();
-                    foreach (var animator in animators)
-                    {
-                        animator.SetBool("Moving", false);
-                    }
-
-                    if (soldiers != null)
-                    {
-                        soldiers.SetActive(true);
-                        SetSelected(Selected);
-                    }
                     path = null;
+                    LeanTween.delayedCall(0.5f, () => {
+                        foreach (var animator in animators)
+                        {
+                            animator.SetBool("Moving", false);
+                        }
+
+                        if (soldiers != null)
+                        {
+                            soldiers.SetActive(true);
+                            SetSelected(Selected);
+                        }
+                    });
                 }
                 UpdatePosition(false);
             }
@@ -447,18 +483,23 @@ namespace Project.Units
             var hit = new RaycastHit();
             if (path != null)
             {
-                if (path.Count > 1)
+                if (path.path.Count > 1)
                 {
-                    if (Physics.Raycast(Vector3.Lerp(location.Position,path[1].Position,0.25f) * 1.1f, -location.Position.normalized, out hit, Mathf.Infinity, layerMask))
+                    var nextPos = (path.path[1] as Map.MapPointNode).Area.Position;
+                    if (Physics.Raycast(Vector3.Lerp(location.Position, nextPos, 0.25f) * 1.1f, -location.Position.normalized, out hit, Mathf.Infinity, layerMask))
                     {
                         if (!instant)
                         {
-                            transform.LookAt(hit.point, transform.position.normalized);
-                            LeanTween.move(gameObject, hit.point, 0.5f).setEaseInOutSine().setOnComplete(() => { LeanTween.rotate(gameObject, Quaternion.LookRotation(path[1].Position - location.Position, transform.position.normalized).eulerAngles,0.2f); });
+                            var midpoint = transform.position + transform.forward * Vector3.Distance(transform.position, hit.point)*0.5f;
+                            Debug.Log(transform.position+" "+ midpoint+" "+ hit.point);
+                            LeanTween.moveSpline(gameObject, new Vector3[] { transform.position,transform.position, midpoint, hit.point, hit.point }, 0.5f).setEaseInOutSine();//.setOnComplete(() => {
+                                //transform.LookAt((path.path[1] as Map.MapPointNode).Area.transform, transform.position.normalized);
+                            LeanTween.rotate(gameObject, Quaternion.LookRotation((path.path[1] as Map.MapPointNode).Area.Position - location.Position, transform.position.normalized).eulerAngles, 0.5f).setEaseInOutSine();
+                            //});
                         }
                         else
                         {
-                            transform.LookAt(path[1].Position, transform.position.normalized);
+                            transform.LookAt((path.path[1] as Map.MapPointNode).Area.Position, transform.position.normalized);
                             transform.position = hit.point;
                         }
                         UnitPath.Destroy();
